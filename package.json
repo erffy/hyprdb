@@ -1,5 +1,5 @@
 {
-  "name": "nova.db",
+  "name": "@erqeweew/nova.db",
   "version": "1.0.0",
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.js",
