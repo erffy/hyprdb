@@ -1,6 +1,7 @@
 {
   "name": "@erqeweew/nova.db",
   "version": "1.0.0",
+  "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.js",
   "type": "module",
@@ -44,5 +45,8 @@
   "optionalDependencies": {
     "bson": "^5.3.0",
     "yaml": "^2.3.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
