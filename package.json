@@ -1,0 +1,48 @@
+{
+  "name": "nova.db",
+  "version": "1.0.0",
+  "description": "Faster, Lightweight and Small Advanced database module.",
+  "main": "./src/index.js",
+  "type": "module",
+  "types": "./src/global.d.ts",
+  "exports": {
+    "require": "./build/index.js",
+    "import": "./src/index.js",
+    "types": "./src/global.d.ts"
+  },
+  "scripts": {
+    "start": "clear && node src/index",
+    "build": "babel src --out-dir build"
+  },
+  "keywords": [
+    "db",
+    "database",
+    "json",
+    "bson",
+    "yaml",
+    "data-base",
+    "nova.db"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https:/7github.com/erqeweew/novadb.git"
+  },
+  "author": "erqewee",
+  "license": "MIT",
+  "dependencies": {
+    "@sapphire/shapeshift": "^3.9.2",
+    "graceful-fs": "^4.2.11",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.22.5",
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "@types/graceful-fs": "^4.1.6",
+    "@types/node": "^20.3.3"
+  },
+  "optionalDependencies": {
+    "bson": "^5.3.0",
+    "yaml": "^2.3.1"
+  }
+}
