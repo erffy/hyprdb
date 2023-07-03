@@ -1,12 +1,12 @@
-const Database = require('./dist/Database');
+const Database = require('./classes/Database');
 
-const YAMLProvider = require('./dist/providers/YAML');
-const JSONProvider = require('./dist/providers/JSON');
-const BSONProvider = require('./dist/providers/BSON');
+const YAMLDriver = require('./structures/YAML');
+const JSONDriver = require('./structures/JSON');
+const BSONDriver = require('./structures/BSON');
 
 module.exports = {
   Database,
-  YAMLProvider,
-  JSONProvider,
-  BSONProvider
+  YAMLDriver,
+  JSONDriver,
+  BSONDriver
 };

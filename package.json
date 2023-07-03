@@ -1,15 +1,26 @@
 {
   "name": "hypr.db",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.mjs",
   "types": "./src/global.d.ts",
   "exports": {
-    "types": "./src/global.d.ts",
-    "default": "./src/index.js",
-    "require": "./src/index.js",
-    "import": "./src/index.mjs"
+    ".": {
+      "require": "./src/index.js",
+      "import": "./src/index.mjs",
+      "types": "./src/global.d.ts"
+    },
+    "./esm": "./src/index.mjs",
+    "./cjs": "./src/index.js",
+    "./esm/database": "./src/classes/Database.mjs",
+    "./cjs/database": "./src/classes/Database.js",
+    "./esm/json": "./src/structures/JSON.mjs",
+    "./cjs/json": "./src/structures/JSON.js",
+    "./esm/yaml": "./src/structures/YAML.mjs",
+    "./cjs/yaml": "./src/structures/YAML.js",
+    "./esm/bson": "./src/structures/BSON.mjs",
+    "./cjs/bson": "./src/structures/BSON.js"
   },
   "scripts": {
     "start": "clear && node src/index",
@@ -28,10 +39,12 @@
     "type": "git",
     "url": "https://github.com/erqeweew/hyprdb.git"
   },
+  "homepage": "https://github.com/erqeweew/hyprdb",
   "author": "erqewee",
   "license": "MIT",
   "dependencies": {
     "@sapphire/shapeshift": "^3.9.2",
+    "chalk": "^5.3.0",
     "graceful-fs": "^4.2.11",
     "lodash": "^4.17.21"
   },

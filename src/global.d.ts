@@ -1,13 +1,13 @@
 declare module 'hypr.db' {
-  export class Database<V extends hypr.Signature<V>> {
+  export class Database<V extends hypr.DatabaseSignature<V> = hypr.DatabaseMap> {
     public constructor(options?: hypr.DatabaseOptions);
     
     private options: hypr.DatabaseOptions;
     
     /**
-     * Database provider.
+     * Database driver.
      */
-    public readonly provider: hypr.AnyDatabaseProvider;
+    public readonly driver: hypr.AnyDatabaseDriver;
     /**
      * Database size.
      */
@@ -18,7 +18,7 @@ declare module 'hypr.db' {
      * @param key Key
      * @param value Value
      */
-    public set<K extends keyof V>(key: K | string, value: V[K]): V[K];
+    public set<K extends keyof V>(key: K, value: V[K]): V[K];
     /**
      * Get value with index.
      * @param index Index
@@ -34,46 +34,46 @@ declare module 'hypr.db' {
      * @param key Key
      * @param value New Value
      */
-    public update<K extends keyof V>(key: K | string, value: V[K]): V[K];
+    public update<K extends keyof V>(key: K, value: V[K]): V[K];
     /**
      * Get data from database.
      * @param key Key
      */
-    public get<K extends keyof V>(key: K | string): V[K];
+    public get<K extends keyof V>(key: K): V[K];
     /**
      * Delete data from database.
      * @param key Key
      */
-    public del<K extends keyof V>(key: K | string): boolean;
+    public del<K extends keyof V>(key: K): boolean;
     /**
      * Check key is exists in database.
      * @param key Key
      */
-    public exists<K extends keyof V>(key: K | string): boolean;
+    public exists<K extends keyof V>(key: K): boolean;
     /**
      * Check key is exists in database.
      * @param key Key
      */
-    public has<K extends keyof V>(key: K | string): boolean;
+    public has<K extends keyof V>(key: K): boolean;
     /**
      * Get all data from database.
      * @param amount Amount of data
      */
-    public all<K extends keyof V>(amount?: number): Array<{ key: K | string, value: V[K] }>;
+    public all<K extends keyof V>(amount?: number): Array<{ key: K, value: V[K] }>;
     /**
      * Addition in database over key.
      * @param key Key
      * @param amount Amount to add.
      * @param negative Set it to be negative.
      */
-    public add<K extends keyof V>(key: K | string, amount?: number, negative?: boolean): number;
+    public add<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
     /**
      * Subtraction in database over key.
      * @param key Key
      * @param amount Amount to subtract.
      * @param negative Set it to be negative.
      */
-    public sub<K extends keyof V>(key: K | string, amount?: number, negative?: boolean): number;
+    public sub<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
     /**
      * Do math in easily.
      * @param key Key
@@ -82,27 +82,27 @@ declare module 'hypr.db' {
      * @param numberTwo Second number.
      * @param negative Set it to be negative.
      */
-    public math<K extends keyof V>(key: K | string, numberOne: number, operator: hypr.MathOperations, numberTwo: number, negative?: boolean): number;
+    public math<K extends keyof V>(key: K, numberOne: number, operator: hypr.MathOperations, numberTwo: number, negative?: boolean): number;
     /**
      * Push values to array.
      * @param key Key
      * @param values Values to push.
      */
-    public push<K extends keyof V>(key: K | string, ...values: Array<any>): void;
+    public push<K extends keyof V>(key: K, ...values: V[K]): void;
     /**
      * Pulls data from array.
      * @param key Key
      * @param callback Condition 
      */
-    public pull<K extends keyof V>(key: K | string, callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): Array<V[K]>;
+    public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): Array<V[K]>;
     /**
      * Convert database to array.
      */
-    public toArray<K extends keyof V>(): { keys: Array<K | string>, values: Array<V[K]> };
+    public toArray<K extends keyof V>(): { keys: Array<K>, values: Array<V[K]> };
     /**
      * Convert database to object.
      */
-    public toJSON(): hypr.Signature<V>;
+    public toJSON(): hypr.DatabaseSignature<V>;
     /**
      * Filter database.
      * @param callback Condition
@@ -129,12 +129,12 @@ declare module 'hypr.db' {
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      * @param callback Condition
      */
-    public map<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => unknown): void;
+    public map<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => V[K]): void;
     /**
      * Get data type of stored value in key.
      * @param key Key
      */
-    public type<K extends keyof V>(key: K | string): hypr.DataTypes;
+    public type<K extends keyof V>(key: K): hypr.DataTypes;
 
     /**
      * Database version.
@@ -142,40 +142,44 @@ declare module 'hypr.db' {
     static readonly version: string;
   }
 
-  export class JSONProvider extends hypr.JSONProvider {
+  export class JSONDriver extends hypr.JSONDriver {
 
   }
 
-  export class BSONProvider extends hypr.BSONProvider {
+  export class BSONDriver extends hypr.BSONDriver {
 
   }
 
-  export class YAMLProvider extends hypr.YAMLProvider {
+  export class YAMLDriver extends hypr.YAMLDriver {
     
   }
 }
 
 export declare namespace hypr {
-  type AnyDatabaseProvider = JSONProvider | YAMLProvider | BSONProvider;
+  type AnyDatabaseDriver = JSONDriver | YAMLDriver | BSONDriver;
   type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
-  type Signature<V = unknown> = { [key in keyof V]: V[key] };
+  type DatabaseSignature<V> = { [key in keyof V]: unknown };
+  interface DatabaseMap {
+    [key: string]: unknown;
+  }
   type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
   
-  class JSONProvider {
+  class JSONDriver {
     public constructor(path?: string, spaces?: number);
 
     private path: string;
 
-    public write(data: object): void;
-    public read(): string;
-    public toJSON(): object;
+    public readonly cache: object;
+
+    public write(): void;
+    public save(): void;
   }
 
-  class BSONProvider extends JSONProvider {
+  class BSONDriver extends JSONDriver {
 
   }
 
-  class YAMLProvider extends JSONProvider {
+  class YAMLDriver extends JSONDriver {
 
   }
 
@@ -183,6 +187,6 @@ export declare namespace hypr {
     path?: string;
     size?: number;
     spaces?: number;
-    provider?: AnyDatabaseProvider;
+    driver?: AnyDatabaseDriver;
   }
 }

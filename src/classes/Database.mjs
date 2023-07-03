@@ -1,35 +1,37 @@
-const { s } = require('@sapphire/shapeshift');
-const lodash = require('lodash');
+import { s } from "@sapphire/shapeshift";
+import lodash from 'lodash';
+import { createRequire } from "node:module";
 
-const JSONProvider = require('./providers/JSON');
+import DatabaseError from './DatabaseError.mjs';
+import JSONDriver from '../structures/JSON.mjs';
 
-const pkg = require('../../package.json');
+const pkg = ((createRequire(import.meta.url))('../../package.json'));
 
 /**
  * Nova Database.
  * @class Database
  */
-module.exports = class Database {
+export default class Database {
   /**
    * Create new Database.
-   * @param {import('../global').novadatabase.DatabaseOptions} options
+   * @param {import('../global').hypr.DatabaseOptions} options
    * @constructor
    */
   constructor(options = {}) {
     options.spaces ??= 2;
     options.size ??= 0;
 
-    options.provider ??= new JSONProvider(options?.path, options.spaces);
+    options.driver ??= new JSONDriver(options?.path, options.spaces);
 
-    s.number.parse(options.spaces);
-    s.number.parse(options.size);
+    if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
+    if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
 
     /**
-     * Database provider.
-     * @type import('../global').novadatabase.AnyDatabaseProvider
+     * Database driver.
+     * @type import('../global').hypr.AnyDatabaseDriver
      * @readonly
      */
-    this.provider = options.provider;
+    this.driver = options.driver;
 
     /**
      * Database options.
@@ -56,12 +58,11 @@ module.exports = class Database {
   set(key, value) {
     s.string.parse(key);
 
-    if (this.options.size > 0 && (this.size >= this.options.size)) throw new RangeError('Database limit exceeded.');
+    if (this.options.size > 0 && (this.size >= this.options.size)) (new DatabaseError('Database limit exceeded.', { name: 'RangeError' })).throw();
 
-    const data = this.provider.toJSON();
-    lodash.set(data, key, value);
+    lodash.set(this.driver.cache, key, value);
 
-    this.provider.write(data);
+    this.driver.write();
 
     this.size++;
 
@@ -79,9 +80,9 @@ module.exports = class Database {
 
     const data = this.toArray().values;
 
-    if (index > data.length) throw new RangeError('Value limit exceeded.');
+    if (index > data.length) (new DatabaseError('Value limit exceeded.', { name: 'RangeError' })).throw();
 
-    const prop = data[index];
+    const prop = data.at(index);
 
     return prop;
   };
@@ -97,9 +98,9 @@ module.exports = class Database {
 
     const data = this.toArray().keys;
 
-    if (index > data.length) throw new RangeError('Key limit exceeded.');
+    if (index > data.length) (new DatabaseError('Key limit exceeded.', { name: 'RangeError' })).throw();
 
-    const prop = data[index];
+    const prop = data.at(index);
 
     return prop;
   };
@@ -131,8 +132,7 @@ module.exports = class Database {
   get(key) {
     s.string.parse(key);
 
-    const data = this.provider.toJSON();
-    const value = lodash.get(data, key);
+    const value = lodash.get(this.driver.cache, key);
 
     return value;
   };
@@ -146,10 +146,9 @@ module.exports = class Database {
   del(key) {
     s.string.parse(key);
 
-    const data = this.provider.toJSON();
-    const parsed = lodash.unset(data, key);
+    const parsed = lodash.unset(this.driver.cache, key);
 
-    this.provider.write(data);
+    this.driver.write();
 
     this.size--;
 
@@ -165,8 +164,7 @@ module.exports = class Database {
   exists(key) {
     s.string.parse(key);
 
-    const data = this.provider.toJSON();
-    const exists = lodash.has(data, key);
+    const exists = lodash.has(this.driver.cache, key);
 
     return exists;
   };
@@ -191,11 +189,10 @@ module.exports = class Database {
   all(amount = 0) {
     s.number.parse(amount);
 
-    const json = this.provider.toJSON();
-    const data = Object.keys(json);
+    const data = Object.keys(this.driver.cache);
 
     let results = [];
-    for (const key of data) results.push({ key, value: lodash.get(json, key) });
+    for (const key of data) results.push({ key, value: lodash.get(this.driver.cache, key) });
 
     if (amount > 0) results = results.splice(0, amount);
 
@@ -215,7 +212,7 @@ module.exports = class Database {
     s.number.parse(amount);
 
     const data = this.get(key);
-    if (typeof data !== 'number') throw new TypeError(`'${data}' is not Number.`);
+    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
 
     const math = this.math(data, '+', amount, negative);
 
@@ -235,7 +232,7 @@ module.exports = class Database {
     s.number.parse(amount);
 
     const data = this.get(key);
-    if (typeof data !== 'number') throw new TypeError(`'${data}' is not Number.`);
+    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
 
     const math = this.math(data, '-', amount, negative);
 
@@ -259,7 +256,7 @@ module.exports = class Database {
     if (!this.exists(key)) this.set(key, 0);
 
     const data = this.get(key);
-    if (typeof data !== 'number') throw new TypeError(`'${data}' is not Number.`);
+    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
 
     let result = 0;
     if (operator === '+') result = numberOne + numberTwo;
@@ -305,13 +302,13 @@ module.exports = class Database {
   pull(key, callback = () => { }, thisArg) {
     s.string.parse(key);
 
-    if (callback && typeof callback !== 'function') throw new TypeError(`'${callback}' is not Function.`);
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
     if (!this.exists(key)) return null;
 
     const data = this.get(key);
 
-    if (!Array.isArray(data)) throw new TypeError(`'${data}' is not Array.`);
+    if (!Array.isArray(data)) (new DatabaseError(`'${data}' is not Array.`, { name: 'TypeError' })).throw();
 
     if (thisArg) callback = callback.bind(thisArg);
 
@@ -364,7 +361,7 @@ module.exports = class Database {
    * @example db.filter((prop) => prop === '1.1');
    */
   filter(callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') throw new TypeError(`'${callback}' is not Function.`);
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
     if (thisArg) callback = callback.bind(thisArg);
 
@@ -384,7 +381,7 @@ module.exports = class Database {
    * @example db.find((prop) => prop === '1.0');
    */
   find(callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') throw new TypeError(`'${callback}' is not Function.`);
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
     if (thisArg) callback = callback.bind(thisArg);
 
@@ -406,8 +403,8 @@ module.exports = class Database {
    * @param {(value: { key: string, value: unknown }, index: number, array: Array<{ key: string, value: unknown }>)} callback 
    * @returns {void}
    */
-  findUpdate(value, callback = () => {}, thisArg) {
-    if (callback && typeof callback !== 'function') throw new TypeError(`'${callback}' is not Function.`);
+  findUpdate(value, callback = () => { }, thisArg) {
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
     if (thisArg) callback = callback.bind(thisArg);
 
@@ -426,8 +423,8 @@ module.exports = class Database {
    * @param {(value: { key: string, value: unknown }, index: number, array: Array<{ key: string, value: unknown }>)} callback 
    * @returns {void}
    */
-  findDelete(callback = () => {}, thisArg) {
-    if (callback && typeof callback !== 'function') throw new TypeError(`'${callback}' is not Function.`);
+  findDelete(callback = () => { }, thisArg) {
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
     if (thisArg) callback = callback.bind(thisArg);
 
@@ -446,8 +443,8 @@ module.exports = class Database {
    * @param {(value: unknown, index: number, array: Array<unknown>)} callback 
    * @returns {void}
    */
-  map(callback = () => {}, thisArg) {
-    if (callback && typeof callback !== 'function') throw new TypeError(`'${callback}' is not Function.`);
+  map(callback = () => { }, thisArg) {
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
     if (thisArg) callback = callback.bind(thisArg);
 

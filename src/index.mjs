@@ -1,7 +1,7 @@
-import Database from './dist/Database.mjs';
+import Database from './classes/Database.mjs';
 
-import JSONProvider from './dist/providers/JSON.mjs';
-import YAMLProvider from './dist/providers/YAML.mjs';
-import BSONProvider from './dist/providers/BSON.mjs';
+import JSONDriver from './structures/JSON.mjs';
+import YAMLDriver from './structures/YAML.mjs';
+import BSONDriver from './structures/BSON.mjs';
 
-export { Database, JSONProvider, YAMLProvider, BSONProvider };
+export { Database, JSONDriver, YAMLDriver, BSONDriver };

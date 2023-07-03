@@ -12,12 +12,12 @@ pnpm install hypr.db
 
 ## Features
 
-- Faster
-- Lightweight
-- JSON, BSON and YAML databases
-- TypeScript typing
-- Written with ESM
-- Small
+- Faster: Optimized for you.
+- Lightweight: Low size.
+- Multi Support: We are supporting YAML, JSON and BSON!
+- TypeScript typing: For Advanced Efficiency.
+- Written with ESM: For better performance.
+- Small: Faster download.
 - Over 20+ functions
 
 ## Usage
@@ -26,21 +26,21 @@ pnpm install hypr.db
 
 ```ts
 // ESM
-import { Database } from 'hypr.db';
+import { Database } from 'hypr.db/esm';
 
 const db = new Database<{ 'hypr': string }>();
 
 db.set('hypr', 'ok');
 ```
 
-### Json Provider (Default)
+### Json Driver (Default)
 
 ```js
 // ESM
-import { Database } from 'hypr.db';
+import { Database } from 'hypr.db/esm';
 
 // CJS
-const { Database } = require('hypr.db');
+const { Database } = require('hypr.db/cjs');
 
 const db = new Database();
 
@@ -50,7 +50,7 @@ db.exists('hypr');
 db.del('hypr');
 ```
 
-### Yaml Provider
+### Yaml Driver
 
 - You need to download the [`yaml`](https://npmjs.com/yaml) module.
 
@@ -60,12 +60,12 @@ pnpm install yaml
 
 ```js
 // ESM
-import { Database, YAMLProvider } from 'hypr.db';
+import { Database, YAMLDriver } from 'hypr.db/esm';
 
 // CJS
-const { Database , YAMLProvider } = require('hypr.db');
-const provider = new YAMLProvider();
-const db = new Database({ provider });
+const { Database , YAMLDriver } = require('hypr.db/cjs');
+const driver = new YAMLDriver();
+const db = new Database({ driver });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -73,7 +73,7 @@ db.exists('hypr');
 db.del('hypr');
 ```
 
-### Bson Provider
+### Bson Driver
 
 - You need to download the [`bson`](https://npmjs.com/bson) module.
 
@@ -83,12 +83,12 @@ pnpm install bson
 
 ```js
 // ESM
-import { Database, BSONProvider } from 'hypr.db';
+import { Database, BSONDriver } from 'hypr.db/esm';
 
 // CJS
-const { Database, BSONProvider } = require('hypr.db');
-const provider = new BSONProvider();
-const db = new Database({ provider });
+const { Database, BSONDriver } = require('hypr.db/cjs');
+const driver = new BSONDriver();
+const db = new Database({ driver });
 
 db.set('hypr', 'ok');
 db.get('hypr');
