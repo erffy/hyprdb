@@ -1,13 +1,13 @@
 declare module 'hyper.db' {
-  export class Database<V extends novadatabase.Signature<V>> {
-    public constructor(options?: novadatabase.DatabaseOptions);
+  export class Database<V extends hyper.Signature<V>> {
+    public constructor(options?: hyper.DatabaseOptions);
     
-    private options: novadatabase.DatabaseOptions;
+    private options: hyper.DatabaseOptions;
     
     /**
      * Database provider.
      */
-    public readonly provider: novadatabase.AnyDatabaseProvider;
+    public readonly provider: hyper.AnyDatabaseProvider;
     /**
      * Database size.
      */
@@ -82,7 +82,7 @@ declare module 'hyper.db' {
      * @param numberTwo Second number.
      * @param negative Set it to be negative.
      */
-    public math<K extends keyof V>(key: K | string, numberOne: number, operator: novadatabase.MathOperations, numberTwo: number, negative?: boolean): number;
+    public math<K extends keyof V>(key: K | string, numberOne: number, operator: hyper.MathOperations, numberTwo: number, negative?: boolean): number;
     /**
      * Push values to array.
      * @param key Key
@@ -102,7 +102,7 @@ declare module 'hyper.db' {
     /**
      * Convert database to object.
      */
-    public toJSON(): novadatabase.Signature<V>;
+    public toJSON(): hyper.Signature<V>;
     /**
      * Filter database.
      * @param callback Condition
@@ -134,7 +134,7 @@ declare module 'hyper.db' {
      * Get data type of stored value in key.
      * @param key Key
      */
-    public type<K extends keyof V>(key: K | string): novadatabase.DataTypes;
+    public type<K extends keyof V>(key: K | string): hyper.DataTypes;
 
     /**
      * Database version.
@@ -142,20 +142,20 @@ declare module 'hyper.db' {
     static readonly version: string;
   }
 
-  export class JSONProvider extends novadatabase.JSONProvider {
+  export class JSONProvider extends hyper.JSONProvider {
 
   }
 
-  export class BSONProvider extends novadatabase.BSONProvider {
+  export class BSONProvider extends hyper.BSONProvider {
 
   }
 
-  export class YAMLProvider extends novadatabase.YAMLProvider {
+  export class YAMLProvider extends hyper.YAMLProvider {
     
   }
 }
 
-export declare namespace novadatabase {
+export declare namespace hyper {
   type AnyDatabaseProvider = JSONProvider | YAMLProvider | BSONProvider;
   type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
   type Signature<V = unknown> = { [key in keyof V]: V[key] };
