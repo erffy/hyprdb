@@ -1,15 +1,16 @@
-const { s } = require('@sapphire/shapeshift');
-const lodash = require('lodash');
+import { s } from "@sapphire/shapeshift";
+import lodash from 'lodash';
+import { createRequire } from "node:module";
 
-const JSONProvider = require('./providers/JSON');
+import JSONProvider from './providers/JSON.mjs';
 
-const pkg = require('../../package.json');
+const pkg = ((createRequire(import.meta.url))('../../package.json'));
 
 /**
  * Nova Database.
  * @class Database
  */
-module.exports = class Database {
+export default class Database {
   /**
    * Create new Database.
    * @param {import('../global').novadatabase.DatabaseOptions} options

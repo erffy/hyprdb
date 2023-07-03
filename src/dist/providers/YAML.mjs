@@ -1,8 +1,8 @@
-const { s } = require('@sapphire/shapeshift');
-const graceful = require('graceful-fs');
-const YAML = require('yaml');
+import { s } from '@sapphire/shapeshift';
+import graceful from 'graceful-fs';
+import YAML from 'yaml';
 
-module.exports = class YAMLProvider {
+export default class YAMLProvider {
   /**
    * Create new YAML-Based database.
    * @param {string} path 

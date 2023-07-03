@@ -1,19 +1,19 @@
 {
   "name": "@erqeweew/nova.db",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
-  "main": "./src/index.js",
-  "type": "module",
+  "main": "./src/index.mjs",
   "types": "./src/global.d.ts",
   "exports": {
-    "require": "./build/index.js",
-    "import": "./src/index.js",
-    "types": "./src/global.d.ts"
+    "types": "./src/global.d.ts",
+    "default": "./src/index.js",
+    "require": "./src/index.js",
+    "import": "./src/index.mjs"
   },
   "scripts": {
     "start": "clear && node src/index",
-    "build": "babel src --out-dir build"
+    "start:esm": "clear && node src/index.mjs"
   },
   "keywords": [
     "db",
@@ -36,9 +36,6 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@babel/cli": "^7.22.5",
-    "@babel/core": "^7.22.5",
-    "@babel/preset-env": "^7.22.5",
     "@types/graceful-fs": "^4.1.6",
     "@types/node": "^20.3.3"
   },

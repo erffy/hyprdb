@@ -1,8 +1,12 @@
-import Database from './dist/Database.js';
+const Database = require('./dist/Database');
 
-import JSONProvider from './dist/providers/JSON.js';
-import YAMLProvider from './dist/providers/YAML.js';
-import BSONProvider from './dist/providers/BSON.js';
+const YAMLProvider = require('./dist/providers/YAML');
+const JSONProvider = require('./dist/providers/JSON');
+const BSONProvider = require('./dist/providers/BSON');
 
-export default Database;
-export { Database, JSONProvider, YAMLProvider, BSONProvider };
+module.exports = {
+  Database,
+  YAMLProvider,
+  JSONProvider,
+  BSONProvider
+};

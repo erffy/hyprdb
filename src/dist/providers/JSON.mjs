@@ -1,7 +1,7 @@
-const { s } = require('@sapphire/shapeshift');
-const graceful = require('graceful-fs');
+import { s } from '@sapphire/shapeshift';
+import graceful from 'graceful-fs';
 
-module.exports = class JSONProvider {
+export default class JSONProvider {
   /**
    * Create new JSON-Based database.
    * @param {string} path 

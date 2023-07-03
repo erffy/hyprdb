@@ -1,8 +1,8 @@
-const { s } = require('@sapphire/shapeshift');
-const graceful = require('graceful-fs');
-const BSON = require('bson');
+import { s } from '@sapphire/shapeshift';
+import graceful from 'graceful-fs';
+import * as BSON from 'bson';
 
-module.exports = class BSONProvider {
+export default class BSONProvider {
   /**
    * Create new Binary-Based database.
    * @param {string} path
