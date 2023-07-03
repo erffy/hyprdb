@@ -7,7 +7,7 @@
 - We recommend to use [`pnpm`](https://npmjs.com/pnpm).
 
 ```bash
-pnpm install hyper.db
+pnpm install hypr.db
 ```
 
 ## Features
@@ -26,28 +26,28 @@ pnpm install hyper.db
 
 ```ts
 // ESM
-import { Database } from 'hyper.db';
+import { Database } from 'hypr.db';
 
-const db = new Database<{ 'nova': string }>();
+const db = new Database<{ 'hypr': string }>();
 
-db.set('nova', 'ok');
+db.set('hypr', 'ok');
 ```
 
 ### Json Provider (Default)
 
 ```js
 // ESM
-import { Database } from 'hyper.db';
+import { Database } from 'hypr.db';
 
 // CJS
-const { Database } = require('hyper.db');
+const { Database } = require('hypr.db');
 
 const db = new Database();
 
-db.set('nova', 'ok');
-db.get('nova');
-db.exists('nova');
-db.del('nova');
+db.set('hypr', 'ok');
+db.get('hypr');
+db.exists('hypr');
+db.del('hypr');
 ```
 
 ### Yaml Provider
@@ -60,17 +60,17 @@ pnpm install yaml
 
 ```js
 // ESM
-import { Database, YAMLProvider } from 'hyper.db';
+import { Database, YAMLProvider } from 'hypr.db';
 
 // CJS
-const { Database , YAMLProvider } = require('hyper.db');
+const { Database , YAMLProvider } = require('hypr.db');
 const provider = new YAMLProvider();
 const db = new Database({ provider });
 
-db.set('nova', 'ok');
-db.get('nova');
-db.exists('nova');
-db.del('nova');
+db.set('hypr', 'ok');
+db.get('hypr');
+db.exists('hypr');
+db.del('hypr');
 ```
 
 ### Bson Provider
@@ -83,15 +83,15 @@ pnpm install bson
 
 ```js
 // ESM
-import { Database, BSONProvider } from 'hyper.db';
+import { Database, BSONProvider } from 'hypr.db';
 
 // CJS
-const { Database, BSONProvider } = require('hyper.db');
+const { Database, BSONProvider } = require('hypr.db');
 const provider = new BSONProvider();
 const db = new Database({ provider });
 
-db.set('nova', 'ok');
-db.get('nova');
-db.exists('nova');
-db.del('nova');
+db.set('hypr', 'ok');
+db.get('hypr');
+db.exists('hypr');
+db.del('hypr');
 ```
