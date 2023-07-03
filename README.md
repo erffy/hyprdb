@@ -1,4 +1,4 @@
-# Nova Database
+# Hyper Database
 
 - Faster, Lightweight and Small advanced database.
 
@@ -7,7 +7,7 @@
 - We recommend to use [`pnpm`](https://npmjs.com/pnpm).
 
 ```bash
-pnpm install nova.db
+pnpm install hyper.db
 ```
 
 ## Features
@@ -26,7 +26,7 @@ pnpm install nova.db
 
 ```ts
 // ESM
-import { Database } from '@erqeweew/nova.db';
+import { Database } from 'hyper.db';
 
 const db = new Database<{ 'nova': string }>();
 
@@ -37,10 +37,10 @@ db.set('nova', 'ok');
 
 ```js
 // ESM
-import { Database } from '@erqeweew/nova.db';
+import { Database } from 'hyper.db';
 
 // CJS
-const { Database } = require('@erqeweew/nova.db');
+const { Database } = require('hyper.db');
 
 const db = new Database();
 
@@ -60,10 +60,10 @@ pnpm install yaml
 
 ```js
 // ESM
-import { Database, YAMLProvider } from '@erqeweew/nova.db';
+import { Database, YAMLProvider } from 'hyper.db';
 
 // CJS
-const { Database , YAMLProvider } = require('@erqeweew/nova.db');
+const { Database , YAMLProvider } = require('hyper.db');
 const provider = new YAMLProvider();
 const db = new Database({ provider });
 
@@ -83,10 +83,10 @@ pnpm install bson
 
 ```js
 // ESM
-import { Database, BSONProvider } from '@erqeweew/nova.db';
+import { Database, BSONProvider } from 'hyper.db';
 
 // CJS
-const { Database, BSONProvider } = require('@erqeweew/nova.db');
+const { Database, BSONProvider } = require('hyper.db');
 const provider = new BSONProvider();
 const db = new Database({ provider });
 
