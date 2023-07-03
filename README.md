@@ -26,24 +26,21 @@ pnpm install nova.db
 
 ```ts
 // ESM
-import Database from 'nova.db';
-
-// CJS
-const { Database } = require('nova.db');
+import { Database } from '@erqeweew/nova.db';
 
 const db = new Database<{ 'nova': string }>();
 
 db.set('nova', 'ok');
 ```
 
-### Json Provider
+### Json Provider (Default)
 
 ```js
 // ESM
-import Database from 'nova.db';
+import { Database } from '@erqeweew/nova.db';
 
 // CJS
-const { Database } = require('nova.db');
+const { Database } = require('@erqeweew/nova.db');
 
 const db = new Database();
 
@@ -63,10 +60,10 @@ pnpm install yaml
 
 ```js
 // ESM
-import Database, { YAMLProvider } from 'nova.db';
+import { Database, YAMLProvider } from '@erqeweew/nova.db';
 
 // CJS
-const { Database , YAMLProvider } = require('nova.db');
+const { Database , YAMLProvider } = require('@erqeweew/nova.db');
 const provider = new YAMLProvider();
 const db = new Database({ provider });
 
@@ -86,10 +83,10 @@ pnpm install bson
 
 ```js
 // ESM
-import Database, { BSONProvider } from 'nova.db';
+import { Database, BSONProvider } from '@erqeweew/nova.db';
 
 // CJS
-const { Database, BSONProvider } = require('nova.db');
+const { Database, BSONProvider } = require('@erqeweew/nova.db');
 const provider = new BSONProvider();
 const db = new Database({ provider });
 
