@@ -1,5 +1,5 @@
-declare module 'nova.db' {
-  export class Database<V extends novadatabase.Signature<V> = unknown> {
+declare module 'hyper.db' {
+  export class Database<V extends novadatabase.Signature<V>> {
     public constructor(options?: novadatabase.DatabaseOptions);
     
     private options: novadatabase.DatabaseOptions;
@@ -23,12 +23,12 @@ declare module 'nova.db' {
      * Get value with index.
      * @param index Index
      */
-    public valueAt<I extends number>(index?: I): V[I];
+    public valueAt<I extends number>(index?: I | number): V;
     /**
      * Get key with index.
      * @param index Index
      */
-    public keyAt<I extends number>(index?: I): string;
+    public keyAt<I extends number>(index?: I | number): string;
     /**
      * Update entry from database. If key is not exists, creates new key.
      * @param key Key
@@ -127,7 +127,7 @@ declare module 'nova.db' {
     /**
      * Map database.
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
-     * @param callback 
+     * @param callback Condition
      */
     public map<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => unknown): void;
     /**
@@ -158,7 +158,7 @@ declare module 'nova.db' {
 export declare namespace novadatabase {
   type AnyDatabaseProvider = JSONProvider | YAMLProvider | BSONProvider;
   type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
-  type Signature<V> = { [key in keyof V]: V[key] };
+  type Signature<V = unknown> = { [key in keyof V]: V[key] };
   type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
   
   class JSONProvider {

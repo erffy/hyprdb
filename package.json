@@ -1,6 +1,6 @@
 {
-  "name": "@erqeweew/nova.db",
-  "version": "1.1.0",
+  "name": "hyper.db",
+  "version": "1.0.0",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.mjs",
@@ -21,12 +21,12 @@
     "json",
     "bson",
     "yaml",
-    "data-base",
-    "nova.db"
+    "hyper",
+    "hypr"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/erqeweew/novadb.git"
+    "url": "https://github.com/erqeweew/hyperdb.git"
   },
   "author": "erqewee",
   "license": "MIT",
@@ -37,9 +37,7 @@
   },
   "devDependencies": {
     "@types/graceful-fs": "^4.1.6",
-    "@types/node": "^20.3.3"
-  },
-  "optionalDependencies": {
+    "@types/node": "^20.3.3",
     "bson": "^5.3.0",
     "yaml": "^2.3.1"
   },
