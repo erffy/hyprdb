@@ -1,7 +1,8 @@
 const { s } = require('@sapphire/shapeshift');
 const lodash = require('lodash');
 
-const JSONProvider = require('../structures/JSON');
+const DatabaseError = require('../classes/DatabaseError');
+const JSONDriver = require('../structures/JSON');
 
 const pkg = require('../../package.json');
 
@@ -18,11 +19,13 @@ module.exports = class Database {
   constructor(options = {}) {
     options.spaces ??= 2;
     options.size ??= 0;
+    options.overwrite ??= false;
 
     options.driver ??= new JSONDriver(options?.path, options.spaces);
 
     if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
+    if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
 
     /**
      * Database driver.
@@ -37,6 +40,8 @@ module.exports = class Database {
      * @private
      */
     this.options = options;
+
+    this.size = this.toArray().keys.length;
   };
 
   /**
@@ -284,8 +289,10 @@ module.exports = class Database {
     const data = this.get(key);
     if (!data) this.set(key, values);
 
-    if (Array.isArray(data)) this.update(key, values);
-    else this.set(key, values);
+    if (Array.isArray(data)) {
+      if (this.options.overwrite) this.update(key, values);
+      else this.set(key, [...data, ...values]);
+    } else this.set(key, values);
 
     return void 0;
   };

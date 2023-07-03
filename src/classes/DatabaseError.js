@@ -1,7 +1,7 @@
-import Colorizer from 'string-colorizer';
+const Colorizer = require('string-colorizer').default;
 const colorful = new Colorizer();
 
-export default class DatabaseError extends Error {
+module.exports = class DatabaseError extends Error {
   /**
    * Create new Database error.
    * @param {string} message 

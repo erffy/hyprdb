@@ -1,6 +1,6 @@
 {
   "name": "hypr.db",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.mjs",
@@ -44,9 +44,9 @@
   "license": "MIT",
   "dependencies": {
     "@sapphire/shapeshift": "^3.9.2",
-    "chalk": "^5.3.0",
     "graceful-fs": "^4.2.11",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "string-colorizer": "^1.0.2"
   },
   "devDependencies": {
     "@types/graceful-fs": "^4.1.6",

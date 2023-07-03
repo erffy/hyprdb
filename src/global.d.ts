@@ -186,6 +186,7 @@ export declare namespace hypr {
   interface DatabaseOptions {
     path?: string;
     size?: number;
+    overwrite?: boolean;
     spaces?: number;
     driver?: AnyDatabaseDriver;
   }
