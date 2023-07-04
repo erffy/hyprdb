@@ -1,9 +1,14 @@
-import { s } from "@sapphire/shapeshift";
-import lodash from 'lodash';
 import { createRequire } from "node:module";
+
+import _get from 'lodash.get';
+import _has from 'lodash.has';
+import _unset from 'lodash.unset';
+import _set from 'lodash.set';
 
 import DatabaseError from './DatabaseError.mjs';
 import JSONDriver from '../structures/JSON.mjs';
+import YAMLDriver from '../structures/YAML.mjs';
+import BSONDriver from '../structures/BSON.mjs';
 
 const pkg = ((createRequire(import.meta.url))('../../package.json'));
 
@@ -18,16 +23,16 @@ export default class Database {
    * @constructor
    */
   constructor(options = {}) {
-    options.spaces ??= 2;
     options.size ??= 0;
     options.overwrite ??= false;
 
-    options.driver ??= new JSONDriver(options?.path, options.spaces);
+    options.driver ??= new JSONDriver(options?.path);
 
-    if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
 
+    if (!(options.driver instanceof JSONDriver) && !(options.driver instanceof YAMLDriver) && !(options.driver instanceof BSONDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
+    
     /**
      * Database driver.
      * @type import('../global').hypr.AnyDatabaseDriver
@@ -42,15 +47,13 @@ export default class Database {
      */
     this.options = options;
 
+    /**
+     * Database size.
+     * @type number
+     * @readonly
+     */
     this.size = this.toArray().keys.length;
   };
-
-  /**
-   * Database size.
-   * @type number
-   * @readonly
-   */
-  size = 0;
 
   /**
    * Set data to database.
@@ -60,14 +63,11 @@ export default class Database {
    * @example db.set('nova.version', '1.0.0');
    */
   set(key, value) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
     if (this.options.size > 0 && (this.size >= this.options.size)) (new DatabaseError('Database limit exceeded.', { name: 'RangeError' })).throw();
 
-    lodash.set(this.driver.cache, key, value);
-
-    this.driver.write();
-
+    this.driver.set(key, value);
     this.size++;
 
     return value;
@@ -80,15 +80,13 @@ export default class Database {
    * @example db.valueAt(1);
    */
   valueAt(index = 0) {
-    s.number.parse(index);
+    if (typeof index !== 'number') (new DatabaseError(`'${index}' is not Number.`, { name: 'TypeError' })).throw();
 
     const data = this.toArray().values;
 
     if (index > data.length) (new DatabaseError('Value limit exceeded.', { name: 'RangeError' })).throw();
 
-    const prop = data.at(index);
-
-    return prop;
+    return data[index];
   };
 
   /**
@@ -98,15 +96,13 @@ export default class Database {
    * @example db.keyAt(2);
    */
   keyAt(index = 0) {
-    s.number.parse(index);
+    if (typeof index !== 'number') (new DatabaseError(`'${index}' is not Number.`, { name: 'TypeError' })).throw();
 
     const data = this.toArray().keys;
 
     if (index > data.length) (new DatabaseError('Key limit exceeded.', { name: 'RangeError' })).throw();
 
-    const prop = data.at(index);
-
-    return prop;
+    return data[index];
   };
 
   /**
@@ -117,14 +113,9 @@ export default class Database {
    * @example db.update('key', 'newValue');
    */
   update(key, value) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
-    if (!this.exists(key)) return this.set(key, value);
-
-    this.del(key);
-    this.set(key, value);
-
-    return value;
+    return this.driver.update(key, value);
   };
 
   /**
@@ -134,11 +125,9 @@ export default class Database {
    * @example db.get('nova.version');
    */
   get(key) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
-    const value = lodash.get(this.driver.cache, key);
-
-    return value;
+    return this.driver.get(key);
   };
 
   /**
@@ -148,13 +137,11 @@ export default class Database {
    * @example db.del('nova');
    */
   del(key) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
-    const parsed = lodash.unset(this.driver.cache, key);
+    const parsed = this.driver.delete(key);
 
-    this.driver.write();
-
-    this.size--;
+    if (parsed) this.size--;
 
     return parsed;
   };
@@ -166,11 +153,9 @@ export default class Database {
    * @example db.exists('nova');
    */
   exists(key) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
-    const exists = lodash.has(this.driver.cache, key);
-
-    return exists;
+    return this.driver.exists(key);
   };
 
   /**
@@ -180,8 +165,7 @@ export default class Database {
    * @example db.has('nova');
    */
   has(key) {
-    const exists = this.exists(key);
-    return exists;
+    return this.exists(key);
   };
 
   /**
@@ -191,12 +175,12 @@ export default class Database {
    * @example db.all();
    */
   all(amount = 0) {
-    s.number.parse(amount);
+    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
 
     const data = Object.keys(this.driver.cache);
 
     let results = [];
-    for (const key of data) results.push({ key, value: lodash.get(this.driver.cache, key) });
+    for (const key of data) results.push({ key, value: this.driver.get(key) });
 
     if (amount > 0) results = results.splice(0, amount);
 
@@ -212,8 +196,8 @@ export default class Database {
    * @example db.add('result', 3);
    */
   add(key, amount = 1, negative = false) {
-    s.string.parse(key);
-    s.number.parse(amount);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
 
     const data = this.get(key);
     if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
@@ -232,8 +216,8 @@ export default class Database {
    * @example db.sub('result', 5);
    */
   sub(key, amount = 1, negative = false) {
-    s.string.parse(key);
-    s.number.parse(amount);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
 
     const data = this.get(key);
     if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
@@ -252,10 +236,10 @@ export default class Database {
    * @example db.math('result', 10, '/', 2);
    */
   math(key, numberOne, operator, numberTwo, negative = false) {
-    s.string.parse(key);
-    s.string.parse(operator);
-    s.number.parse(numberOne);
-    s.number.parse(numberTwo);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof operator !== 'string') (new DatabaseError(`'${operator}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof numberOne !== 'number') (new DatabaseError(`'${numberOne}' is not Number.`, { name: 'TypeError' })).throw();
+    if (typeof numberTwo !== 'number') (new DatabaseError(`'${numberTwo}' is not Number.`, { name: 'TypeError' })).throw();
 
     if (!this.exists(key)) this.set(key, 0);
 
@@ -272,9 +256,7 @@ export default class Database {
 
     if (!negative && result < 1) result = 0;
 
-    let parsed = this.update(key, result);
-
-    return parsed;
+    return this.update(key, result);
   };
 
   /**
@@ -285,7 +267,7 @@ export default class Database {
    * @example db.push('versions', '1.0', '1.1');
    */
   push(key, ...values) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
     const data = this.get(key);
     if (!data) this.set(key, values);
@@ -306,7 +288,7 @@ export default class Database {
    * @example db.pull('versions', (prop) => prop === '1.0'));
    */
   pull(key, callback = () => { }, thisArg) {
-    s.string.parse(key);
+    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
     if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
@@ -355,7 +337,7 @@ export default class Database {
     const data = this.all();
 
     const obj = {};
-    for (const prop of data) lodash.set(obj, prop.key, prop.value);
+    for (const prop of data) _set(obj, prop.key, prop.value);
 
     return obj;
   };

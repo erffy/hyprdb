@@ -26,7 +26,7 @@ pnpm install hypr.db
 
 ```ts
 // ESM
-import { Database } from 'hypr.db/esm';
+import { Database } from 'hypr.db';
 
 const db = new Database<{ 'hypr': string }>();
 
@@ -37,10 +37,10 @@ db.set('hypr', 'ok');
 
 ```js
 // ESM
-import { Database } from 'hypr.db/esm';
+import { Database } from 'hypr.db';
 
 // CJS
-const { Database } = require('hypr.db/cjs');
+const { Database } = require('hypr.db'); // or - require('hypr.db/cjs');
 
 const db = new Database();
 
@@ -60,10 +60,10 @@ pnpm install yaml
 
 ```js
 // ESM
-import { Database, YAMLDriver } from 'hypr.db/esm';
+import { Database, YAMLDriver } from 'hypr.db';
 
 // CJS
-const { Database , YAMLDriver } = require('hypr.db/cjs');
+const { Database , YAMLDriver } = require('hypr.db'); // or - require('hypr.db/cjs');
 const driver = new YAMLDriver();
 const db = new Database({ driver });
 
@@ -83,10 +83,10 @@ pnpm install bson
 
 ```js
 // ESM
-import { Database, BSONDriver } from 'hypr.db/esm';
+import { Database, BSONDriver } from 'hypr.db';
 
 // CJS
-const { Database, BSONDriver } = require('hypr.db/cjs');
+const { Database, BSONDriver } = require('hypr.db'); // or - require('hypr.db/cjs');
 const driver = new BSONDriver();
 const db = new Database({ driver });
 

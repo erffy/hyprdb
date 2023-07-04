@@ -1,18 +1,33 @@
-import { s } from '@sapphire/shapeshift';
-import graceful from 'graceful-fs';
-import { BSON } from 'bson';
+import fs from 'fs-extra';
+
+import _get from 'lodash.get';
+import _has from 'lodash.has';
+import _unset from 'lodash.unset';
+import _set from 'lodash.set';
+
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
+import DatabaseError from '../classes/DatabaseError.mjs';
 
 export default class BSONDriver {
   /**
-   * Create new Binary-Based database.
-   * @param {string} path
-   * @constructor 
+   * Create new BSON-Based database.
+   * @param {string} path 
+   * @constructor
    */
   constructor(path = 'database.bson') {
-    s.string.parse(path);
+    if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof spaces !== 'number') (new DatabaseError(`'${spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
     path = `${process.cwd()}/${path}`;
     if (!path.endsWith('.bson')) path += '.bson';
+
+    /**
+     * BSON.
+     * @private
+     */
+    this.bson = require('bson');
 
     /**
      * @type typeof path
@@ -20,18 +35,11 @@ export default class BSONDriver {
      */
     this.path = path;
 
-    const seperators = path.split('/');
-    let __path = '';
-    for (let index = 0; index < (seperators.length - 1); index++) {
-      __path += `${seperators[index]}/`;
+    const __databasePath = path.substring(0, path.lastIndexOf('/'));
+    if (!fs.existsSync(__databasePath)) fs.mkdirSync(__databasePath, { recursive: true });
 
-      if (graceful.existsSync(__path)) continue;
-
-      graceful.mkdirSync(__path);
-    };
-
-    if (!graceful.existsSync(this.path)) this.write({});
-    else this.save();
+    if (!fs.existsSync(this.path)) this.save();
+    else this.load();
   };
 
   /**
@@ -41,23 +49,88 @@ export default class BSONDriver {
   cache = {};
 
   /**
-   * Write database file.
+   * Read database file and convert to object.
+   * @returns {typeof this.cache}
+   */
+  get json() {
+    return this.bson.deserialize(fs.readFileSync(this.path));
+  };
+
+  /**
+   * Push data to database.
+   * @param {string} key 
+   * @param {unknown} value 
    * @returns {void}
    */
-  write() {
-    const encrypted = BSON.serialize(this.cache);
-    graceful.writeFileSync(this.path, encrypted, { encoding: 'binary' });
+  set(key, value) {
+    _set(this.cache, key, value);
+    this.save();
+
+    return value;
+  };
+
+  /**
+   * Update data entry in database.
+   * @param {string} key 
+   * @param {unknown} value 
+   * @returns {unknown}
+   */
+  update(key, value) {
+    if (!this.exists(key)) return this.set(key, value);
+
+    this.delete(key);
+    this.set(key, value);
+
+    return value;
+  };
+
+  /**
+   * Pull data from database. If available in cache, pulls from cache.
+   * @param {string} key 
+   * @returns {unknown}
+   */
+  get(key) {
+    return _get(this.cache, key);
+  };
+
+  /**
+   * Checks specified key is available in database.
+   * @param {string} key 
+   * @returns {boolean}
+   */
+  exists(key) {
+    return _has(this.cache, key);
+  };
+
+  /**
+   * Delete data from database.
+   * @param {string} key 
+   * @returns {boolean}
+   */
+  delete(key) {
+    const state = _unset(this.cache, key);
+    this.save();
+
+    return state;
+  };
+
+  /**
+   * Save cache to database file.
+   * @returns {void}
+   */
+  save() {
+    fs.writeFileSync(this.path, this.bson.serialize(this.cache), { encoding: 'binary' });
 
     return void 0;
   };
 
   /**
-   * Save file to cache.
-   * @returns {void}
+   * Save database file to cache.
+   * @returns {typeof this.cache}
    */
-  save() {
-    this.cache = BSON.deserialize(graceful.readFileSync(this.path));
+  load() {
+    this.cache = this.json;
 
-    return void 0;
+    return this.cache;
   };
 };

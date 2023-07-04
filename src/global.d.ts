@@ -165,29 +165,64 @@ export declare namespace hypr {
   type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
   
   class JSONDriver {
-    public constructor(path?: string, spaces?: number);
+    public constructor(path?: string);
 
     private path: string;
 
     public readonly cache: object;
 
+    public set(key: string, value?: unknown): unknown;
+    public get(key: string): unknown;
+    public delete(key: string): boolean;
+    public exists(key: string): boolean;
+    public update(key: string, value?: unknown): unknown;
+
     public write(): void;
     public save(): void;
+    public read(): void;
+    public load(): typeof this.cache;
   }
 
-  class BSONDriver extends JSONDriver {
+  class BSONDriver {
+    public constructor(path?: string);
 
+    private path: string;
+
+    public readonly cache: object;
+    public readonly json: object;
+
+    public set(key: string, value?: unknown): unknown;
+    public get(key: string): unknown;
+    public delete(key: string): boolean;
+    public exists(key: string): boolean;
+    public update(key: string, value?: unknown): unknown;
+
+    public save(): void;
+    public load(): typeof this.cache;
   }
 
-  class YAMLDriver extends JSONDriver {
+  class YAMLDriver {
+    public constructor(path?: string);
 
+    private path: string;
+
+    public readonly cache: object;
+    public readonly json: object;
+
+    public set(key: string, value?: unknown): unknown;
+    public get(key: string): unknown;
+    public delete(key: string): boolean;
+    public exists(key: string): boolean;
+    public update(key: string, value?: unknown): unknown;
+
+    public save(): void;
+    public load(): typeof this.cache;
   }
 
   interface DatabaseOptions {
     path?: string;
     size?: number;
     overwrite?: boolean;
-    spaces?: number;
     driver?: AnyDatabaseDriver;
   }
 }
