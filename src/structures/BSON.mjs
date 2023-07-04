@@ -18,7 +18,6 @@ export default class BSONDriver {
    */
   constructor(path = 'database.bson') {
     if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof spaces !== 'number') (new DatabaseError(`'${spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
     path = `${process.cwd()}/${path}`;
     if (!path.endsWith('.bson')) path += '.bson';
