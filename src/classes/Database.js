@@ -5,6 +5,8 @@ const _has = require('lodash.has');
 
 const DatabaseError = require('../classes/DatabaseError');
 const JSONDriver = require('../structures/JSON');
+const YAMLDriver = require('../structures/YAML');
+const BSONDriver = require('../structures/BSON');
 
 const pkg = require('../../package.json');
 
@@ -20,12 +22,14 @@ module.exports = class Database {
    */
   constructor(options = {}) {
     options.size ??= 0;
+    options.spaces ??= 2;
     options.overwrite ??= false;
 
     options.driver ??= new JSONDriver(options?.path);
 
     if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
+    if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
     if (!(options.driver instanceof JSONDriver) && !(options.driver instanceof YAMLDriver) && !(options.driver instanceof BSONDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
     
@@ -384,7 +388,7 @@ module.exports = class Database {
   /**
    * 
    * @param {unknown} value Value to update keys.
-   * @param {(value: { key: string, value: unknown }, index: number, array: Array<{ key: string, value: unknown }>)} callback 
+   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
    * @returns {void}
    */
   findUpdate(value, callback = () => { }, thisArg) {
@@ -394,9 +398,7 @@ module.exports = class Database {
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
-      let prop = data[index];
-
-      if (callback(prop, index, data)) this.update(prop.key, value);
+      if (callback(prop[index].value, prop[index].key, index, data)) this.update(prop[index].key, value);
     };
 
     return void 0;
@@ -404,7 +406,7 @@ module.exports = class Database {
 
   /**
    * 
-   * @param {(value: { key: string, value: unknown }, index: number, array: Array<{ key: string, value: unknown }>)} callback 
+   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
    * @returns {void}
    */
   findDelete(callback = () => { }, thisArg) {
@@ -414,9 +416,7 @@ module.exports = class Database {
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
-      let prop = data[index];
-
-      if (callback(prop, index, data)) this.del(prop.key);
+      if (callback(prop[index].value, prop[index].key, index, data)) this.del(prop[index].key);
     };
 
     return void 0;
@@ -424,7 +424,7 @@ module.exports = class Database {
 
   /**
    * 
-   * @param {(value: unknown, index: number, array: Array<unknown>)} callback 
+   * @param {(value: unknown, key: string, index: number, array: Array<unknown>)} callback 
    * @returns {void}
    */
   map(callback = () => { }, thisArg) {
@@ -433,7 +433,7 @@ module.exports = class Database {
     if (thisArg) callback = callback.bind(thisArg);
 
     const data = this.all();
-    for (let index = 0; index < data.length; index++) callback(data[index].value, index, data);
+    for (let index = 0; index < data.length; index++) callback(data[index].value, data[index].key, index, data);
 
     return void 0;
   };
@@ -455,6 +455,24 @@ module.exports = class Database {
 
     return __type;
   };
+
+  /**
+   * @type typeof BSONDriver
+   * @readonly
+   */
+  static BSONDriver = BSONDriver;
+  
+  /**
+   * @type typeof YAMLDriver
+   * @readonly
+   */
+  static YAMLDriver = YAMLDriver;
+
+  /**
+  * @type typeof JSONDriver
+  * @readonly
+  */
+  static JSONDriver = JSONDriver;
 
   /**
    * Database (nova.db) version.

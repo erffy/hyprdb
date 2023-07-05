@@ -6,9 +6,10 @@ import _unset from 'lodash.unset';
 import _set from 'lodash.set';
 
 import DatabaseError from './DatabaseError.mjs';
-import JSONDriver from '../structures/JSON.mjs';
-import YAMLDriver from '../structures/YAML.mjs';
-import BSONDriver from '../structures/BSON.mjs';
+import JSONDriver from '../drivers/JSON.mjs';
+import YAMLDriver from '../drivers/YAML.mjs';
+import BSONDriver from '../drivers/BSON.mjs';
+import TOMLDriver from '../drivers/TOML.mjs';
 
 const pkg = ((createRequire(import.meta.url))('../../package.json'));
 
@@ -24,14 +25,16 @@ export default class Database {
    */
   constructor(options = {}) {
     options.size ??= 0;
+    options.spaces ??= 2;
     options.overwrite ??= false;
 
-    options.driver ??= new JSONDriver(options?.path);
+    options.driver ??= new JSONDriver(options?.path, options.spaces);
 
     if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
+    if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
-    if (!(options.driver instanceof JSONDriver) && !(options.driver instanceof YAMLDriver) && !(options.driver instanceof BSONDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
+    if (!(options.driver instanceof JSONDriver) && !(options.driver instanceof YAMLDriver) && !(options.driver instanceof BSONDriver) && !(options.driver instanceof TOMLDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
     
     /**
      * Database driver.
@@ -196,15 +199,7 @@ export default class Database {
    * @example db.add('result', 3);
    */
   add(key, amount = 1, negative = false) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
-
-    const data = this.get(key);
-    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
-
-    const math = this.math(data, '+', amount, negative);
-
-    return math;
+    return this.math(key, this.get(key), '+', amount, negative);
   };
 
   /**
@@ -216,15 +211,7 @@ export default class Database {
    * @example db.sub('result', 5);
    */
   sub(key, amount = 1, negative = false) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
-
-    const data = this.get(key);
-    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
-
-    const math = this.math(data, '-', amount, negative);
-
-    return math;
+    return this.math(key, this.get(key), '-', amount, negative);
   };
 
   /**
@@ -388,7 +375,7 @@ export default class Database {
   /**
    * 
    * @param {unknown} value Value to update keys.
-   * @param {(value: { key: string, value: unknown }, index: number, array: Array<{ key: string, value: unknown }>)} callback 
+   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
    * @returns {void}
    */
   findUpdate(value, callback = () => { }, thisArg) {
@@ -398,9 +385,7 @@ export default class Database {
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
-      let prop = data[index];
-
-      if (callback(prop, index, data)) this.update(prop.key, value);
+      if (callback(prop[index].value, prop[index].key, index, data)) this.update(prop[index].key, value);
     };
 
     return void 0;
@@ -408,7 +393,7 @@ export default class Database {
 
   /**
    * 
-   * @param {(value: { key: string, value: unknown }, index: number, array: Array<{ key: string, value: unknown }>)} callback 
+   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
    * @returns {void}
    */
   findDelete(callback = () => { }, thisArg) {
@@ -418,9 +403,7 @@ export default class Database {
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
-      let prop = data[index];
-
-      if (callback(prop, index, data)) this.del(prop.key);
+      if (callback(prop[index].value, prop[index].key, index, data)) this.del(prop[index].key);
     };
 
     return void 0;
@@ -428,7 +411,7 @@ export default class Database {
 
   /**
    * 
-   * @param {(value: unknown, index: number, array: Array<unknown>)} callback 
+   * @param {(value: unknown, key: string, index: number, array: Array<unknown>)} callback 
    * @returns {void}
    */
   map(callback = () => { }, thisArg) {
@@ -437,7 +420,7 @@ export default class Database {
     if (thisArg) callback = callback.bind(thisArg);
 
     const data = this.all();
-    for (let index = 0; index < data.length; index++) callback(data[index].value, index, data);
+    for (let index = 0; index < data.length; index++) callback(data[index].value, data[index].key, index, data);
 
     return void 0;
   };
@@ -459,6 +442,30 @@ export default class Database {
 
     return __type;
   };
+
+  /**
+   * @type typeof BSONDriver
+   * @readonly
+   */
+  static BSONDriver = BSONDriver;
+  
+  /**
+   * @type typeof YAMLDriver
+   * @readonly
+   */
+  static YAMLDriver = YAMLDriver;
+
+  /**
+  * @type typeof JSONDriver
+  * @readonly
+  */
+  static JSONDriver = JSONDriver;
+
+  /**
+  * @type typeof TOMLDriver
+  * @readonly
+  */
+  static TOMLDriver = TOMLDriver;
 
   /**
    * Database (nova.db) version.

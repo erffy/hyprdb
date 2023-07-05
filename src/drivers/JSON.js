@@ -1,32 +1,31 @@
-import fs from 'fs-extra';
+const fs = require('fs-extra');
 
-import _get from 'lodash.get';
-import _has from 'lodash.has';
-import _unset from 'lodash.unset';
-import _set from 'lodash.set';
+const _set = require('lodash.set');
+const _get = require('lodash.get');
+const _has = require('lodash.has');
+const _unset = require('lodash.unset');
+const _merge = require('lodash.merge');
 
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
+const DatabaseError = require('../classes/DatabaseError');
 
-import DatabaseError from '../classes/DatabaseError.mjs';
-
-export default class BSONDriver {
+module.exports = class JSONDriver {
   /**
-   * Create new BSON-Based database.
+   * Create new JSON-Based database.
    * @param {string} path 
    * @constructor
    */
-  constructor(path = 'database.bson') {
+  constructor(path = 'database.json', spaces = 2) {
     if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof spaces !== 'number') (new DatabaseError(`'${spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
     path = `${process.cwd()}/${path}`;
-    if (!path.endsWith('.bson')) path += '.bson';
+    if (!path.endsWith('.json')) path += '.json';
 
     /**
-     * BSON.
+     * Database spaces.
      * @private
      */
-    this.bson = require('bson');
+    this.spaces = spaces;
 
     /**
      * @type typeof path
@@ -38,7 +37,7 @@ export default class BSONDriver {
     if (!fs.existsSync(__databasePath)) fs.mkdirSync(__databasePath, { recursive: true });
 
     if (!fs.existsSync(this.path)) this.save();
-    else this.load();
+    else this.read();
   };
 
   /**
@@ -46,14 +45,6 @@ export default class BSONDriver {
    * @readonly
    */
   cache = {};
-
-  /**
-   * Read database file and convert to object.
-   * @returns {typeof this.cache}
-   */
-  get json() {
-    return this.bson.deserialize(fs.readFileSync(this.path));
-  };
 
   /**
    * Push data to database.
@@ -118,18 +109,19 @@ export default class BSONDriver {
    * @returns {void}
    */
   save() {
-    fs.writeFileSync(this.path, this.bson.serialize(this.cache), { encoding: 'binary' });
+    fs.writeFileSync(this.path, Buffer.from(JSON.stringify(this.cache, null, this.spaces)), { encoding: 'utf8' });
 
     return void 0;
   };
 
   /**
-   * Save database file to cache.
-   * @returns {typeof this.cache}
+   * Read database file and save to cache.
+   * @returns {void}
    */
-  load() {
-    this.cache = this.json;
+  read() {
+    const data = JSON.parse(fs.readFileSync(this.path, { encoding: 'utf8' }));
+    _merge(this.cache, data);
 
-    return this.cache;
+    return void 0;
   };
 };

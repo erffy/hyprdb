@@ -1,26 +1,31 @@
-const fs = require('fs-extra');
-const JSONStream = require('JSONStream');
-const { Transform } = require('node:stream');
+import fs from 'fs-extra';
 
-const _set = require('lodash.set');
-const _get = require('lodash.get');
-const _has = require('lodash.has');
-const _unset = require('lodash.unset');
-const _merge = require('lodash.merge');
+import _get from 'lodash.get';
+import _unset from 'lodash.unset';
+import _set from 'lodash.set';
+import _has from 'lodash.has';
+import _merge from 'lodash.merge';
 
-const DatabaseError = require('../classes/DatabaseError');
+import DatabaseError from '../classes/DatabaseError.mjs';
 
-module.exports = class JSONDriver {
+export default class JSONDriver {
   /**
    * Create new JSON-Based database.
    * @param {string} path 
    * @constructor
    */
-  constructor(path = 'database.json') {
+  constructor(path = 'database.json', spaces = 2) {
     if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
+    if (typeof spaces !== 'number') (new DatabaseError(`'${spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
     path = `${process.cwd()}/${path}`;
     if (!path.endsWith('.json')) path += '.json';
+
+    /**
+     * Database spaces.
+     * @private
+     */
+    this.spaces = spaces;
 
     /**
      * @type typeof path
@@ -32,7 +37,7 @@ module.exports = class JSONDriver {
     if (!fs.existsSync(__databasePath)) fs.mkdirSync(__databasePath, { recursive: true });
 
     if (!fs.existsSync(this.path)) this.save();
-    else this.load();
+    else this.read();
   };
 
   /**
@@ -100,23 +105,11 @@ module.exports = class JSONDriver {
   };
 
   /**
-   * Create database file.
-   * @returns {void}
-   */
-  write() {
-    fs.writeFileSync(this.path, '', { encoding: 'utf8' });
-
-    return void 0;
-  }
-  /**
    * Save cache to database file.
    * @returns {void}
    */
   save() {
-    const writeStream = fs.createWriteStream(this.path, { encoding: 'utf8' });
-    const stream = JSONStream.stringify();
-    stream.pipe(writeStream);
-    stream.end(this.cache);
+    fs.writeFileSync(this.path, Buffer.from(JSON.stringify(this.cache, null, this.spaces)), { encoding: 'utf8' });
 
     return void 0;
   };
@@ -126,24 +119,9 @@ module.exports = class JSONDriver {
    * @returns {void}
    */
   read() {
-    const stream = fs.createReadStream(this.path, { encoding: 'utf8' });
-    const parser = JSONStream.parse('*');
-
-    const transform = new Transform({ objectMode: true, transform: (chunk, encoding, callback) => { _merge(this.cache, chunk); callback(); } });
-
-    stream.pipe(parser);
-    stream.pipe(transform);
+    const data = JSON.parse(fs.readFileSync(this.path, { encoding: 'utf8' }));
+    _merge(this.cache, data);
 
     return void 0;
-  };
-
-  /**
-   * Save database file to cache.
-   * @returns {typeof this.cache}
-   */
-  load() {
-    this.read();
-
-    return this.cache;
   };
 };

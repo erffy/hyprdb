@@ -1,5 +1,5 @@
 declare module 'hypr.db' {
-  export class Database<V extends hypr.DatabaseSignature<V> = hypr.DatabaseMap> {
+  export default class Database<V extends hypr.DatabaseSignature<V> = hypr.DatabaseMap> {
     public constructor(options?: hypr.DatabaseOptions);
     
     private options: hypr.DatabaseOptions;
@@ -102,7 +102,7 @@ declare module 'hypr.db' {
     /**
      * Convert database to object.
      */
-    public toJSON(): hypr.DatabaseSignature<V>;
+    public toJSON(): hypr.DatabaseMap;
     /**
      * Filter database.
      * @param callback Condition
@@ -118,18 +118,18 @@ declare module 'hypr.db' {
      * @param value New value to replace.
      * @param callback Condition
      */
-    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): void;
+    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], key: K, index: number, array: Array<V[K]>) => boolean): void;
     /**
      * Find the first value that satisfies the condition and delete it.
      * @param callback Condition
      */
-    public findDelete<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): void;
+    public findDelete<K extends keyof V>(callback?: (value: V[K], key: K, index: number, array: Array<V[K]>) => boolean): void;
     /**
      * Map database.
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      * @param callback Condition
      */
-    public map<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => V[K]): void;
+    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, array: Array<V[K]>) => V[K]): void;
     /**
      * Get data type of stored value in key.
      * @param key Key
@@ -137,31 +137,36 @@ declare module 'hypr.db' {
     public type<K extends keyof V>(key: K): hypr.DataTypes;
 
     /**
+     * BSON Driver.
+     */
+    static readonly BSONDriver: typeof hypr.BSONDriver;
+
+    /**
+     * YAML Driver.
+     */
+    static readonly YAMLDriver: typeof hypr.YAMLDriver;
+
+    /**
+     * JSON Driver.
+     */
+    static readonly JSONDriver: typeof hypr.JSONDriver;
+
+    /**
+     * TOML Driver.
+     */
+    static readonly TOMLDriver: typeof hypr.TOMLDriver;
+
+    /**
      * Database version.
      */
     static readonly version: string;
   }
-
-  export class JSONDriver extends hypr.JSONDriver {
-
-  }
-
-  export class BSONDriver extends hypr.BSONDriver {
-
-  }
-
-  export class YAMLDriver extends hypr.YAMLDriver {
-    
-  }
 }
 
 export declare namespace hypr {
-  type AnyDatabaseDriver = JSONDriver | YAMLDriver | BSONDriver;
+  type AnyDatabaseDriver = JSONDriver | YAMLDriver | BSONDriver | TOMLDriver;
   type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
   type DatabaseSignature<V> = { [key in keyof V]: unknown };
-  interface DatabaseMap {
-    [key: string]: unknown;
-  }
   type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
   
   class JSONDriver {
@@ -177,10 +182,8 @@ export declare namespace hypr {
     public exists(key: string): boolean;
     public update(key: string, value?: unknown): unknown;
 
-    public write(): void;
     public save(): void;
     public read(): void;
-    public load(): typeof this.cache;
   }
 
   class BSONDriver {
@@ -189,7 +192,6 @@ export declare namespace hypr {
     private path: string;
 
     public readonly cache: object;
-    public readonly json: object;
 
     public set(key: string, value?: unknown): unknown;
     public get(key: string): unknown;
@@ -198,7 +200,10 @@ export declare namespace hypr {
     public update(key: string, value?: unknown): unknown;
 
     public save(): void;
-    public load(): typeof this.cache;
+    public read(): void;
+
+    static encode(string: string): string;
+    static decode(binary: string): string; 
   }
 
   class YAMLDriver {
@@ -207,7 +212,6 @@ export declare namespace hypr {
     private path: string;
 
     public readonly cache: object;
-    public readonly json: object;
 
     public set(key: string, value?: unknown): unknown;
     public get(key: string): unknown;
@@ -216,13 +220,63 @@ export declare namespace hypr {
     public update(key: string, value?: unknown): unknown;
 
     public save(): void;
-    public load(): typeof this.cache;
+    public read(): void;
+    public toObject(yaml: string): object;
+    public toYaml(object: object): string;
+  }
+
+  class TOMLDriver {
+    public constructor(path?: string);
+
+    private path: string;
+
+    public readonly cache: object;
+
+    public set(key: string, value?: unknown): unknown;
+    public get(key: string): unknown;
+    public delete(key: string): boolean;
+    public exists(key: string): boolean;
+    public update(key: string, value?: unknown): unknown;
+
+    public save(): void;
+    public read(): void;
+    public toToml(object: object): string;
+    public toObject(toml: string): object;
   }
 
   interface DatabaseOptions {
+    /**
+     * Database Path.
+     * @default database.json
+     */
     path?: string;
+
+    /**
+     * Spaces. (Only JSON and BSON)
+     * @default 2
+     */
+    spaces?: number;
+
+    /**
+     * Database Size.
+     * @default 0
+     */
     size?: number;
+
+    /**
+     * Database Overwrite. (Only 'push' method.)
+     * @default true
+     */
     overwrite?: boolean;
+
+    /**
+     * Database Driver.
+     * @default JSONDriver
+     */
     driver?: AnyDatabaseDriver;
+  }
+
+  interface DatabaseMap {
+    [key: string]: unknown;
   }
 }

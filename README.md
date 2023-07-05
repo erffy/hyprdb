@@ -26,7 +26,7 @@ pnpm install hypr.db
 
 ```ts
 // ESM
-import { Database } from 'hypr.db';
+import Database from 'hypr.db';
 
 const db = new Database<{ 'hypr': string }>();
 
@@ -37,10 +37,10 @@ db.set('hypr', 'ok');
 
 ```js
 // ESM
-import { Database } from 'hypr.db';
+import Database from 'hypr.db';
 
 // CJS
-const { Database } = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db'); // or - require('hypr.db/cjs');
 
 const db = new Database();
 
@@ -52,19 +52,13 @@ db.del('hypr');
 
 ### Yaml Driver
 
-- You need to download the [`yaml`](https://npmjs.com/yaml) module.
-
-```bash
-pnpm install yaml
-```
-
 ```js
 // ESM
-import { Database, YAMLDriver } from 'hypr.db';
+import Database from 'hypr.db';
 
 // CJS
-const { Database , YAMLDriver } = require('hypr.db'); // or - require('hypr.db/cjs');
-const driver = new YAMLDriver();
+const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const driver = new Database.YAMLDriver();
 const db = new Database({ driver });
 
 db.set('hypr', 'ok');
@@ -75,19 +69,30 @@ db.del('hypr');
 
 ### Bson Driver
 
-- You need to download the [`bson`](https://npmjs.com/bson) module.
+```js
+// ESM
+import Database from 'hypr.db';
 
-```bash
-pnpm install bson
+// CJS
+const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const driver = new Database.BSONDriver();
+const db = new Database({ driver });
+
+db.set('hypr', 'ok');
+db.get('hypr');
+db.exists('hypr');
+db.del('hypr');
 ```
+
+### Toml Driver
 
 ```js
 // ESM
-import { Database, BSONDriver } from 'hypr.db';
+import Database from 'hypr.db';
 
 // CJS
-const { Database, BSONDriver } = require('hypr.db'); // or - require('hypr.db/cjs');
-const driver = new BSONDriver();
+const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const driver = new Database.TOMLDriver();
 const db = new Database({ driver });
 
 db.set('hypr', 'ok');
