@@ -14,7 +14,7 @@ pnpm install hypr.db
 
 - Faster: Optimized for you.
 - Lightweight: Low size.
-- Multi Support: We are supporting YAML, JSON and BSON!
+- Multi Support: We are supporting YAML, JSON, BSON and TOML!
 - TypeScript typing: For Advanced Efficiency.
 - Written with ESM: For better performance.
 - Small: Faster download.
