@@ -1,9 +1,10 @@
 {
   "name": "hypr.db",
-  "version": "2.0.0",
+  "version": "3.2.0",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
-  "main": "./src/index.mjs",
+  "main": "./src/index.js",
+  "module": "./src/index.mjs",
   "types": "./src/global.d.ts",
   "exports": {
     ".": {
@@ -15,14 +16,8 @@
     "./cjs": "./src/index.js",
     "./esm/database": "./src/classes/Database.mjs",
     "./cjs/database": "./src/classes/Database.js",
-    "./esm/json": "./src/drivers/JSON.mjs",
-    "./cjs/json": "./src/drivers/JSON.js",
-    "./esm/yaml": "./src/drivers/YAML.mjs",
-    "./cjs/yaml": "./src/drivers/YAML.js",
-    "./esm/bson": "./src/drivers/BSON.mjs",
-    "./cjs/bson": "./src/drivers/BSON.js",
-    "./esm/toml": "./src/drivers/TOML.mjs",
-    "./cjs/toml": "./src/drivers/TOML.js"
+    "./esm/drivers/*": "./src/classes/drivers/*.mjs",
+    "./cjs/drivers/*": "./src/classes/drivers/*.js"
   },
   "scripts": {
     "start": "clear && node src/index",
@@ -45,12 +40,21 @@
   "author": "erqewee",
   "license": "MIT",
   "dependencies": {
-    "fs-extra": "^11.1.1",
     "lodash.get": "^4.4.2",
     "lodash.has": "^4.5.2",
     "lodash.merge": "^4.6.2",
     "lodash.set": "^4.3.2",
     "lodash.unset": "^4.5.2"
+  },
+  "optionalDependencies": {
+    "@iarna/toml": "^2.2.5",
+    "bson-ext": "^4.0.3",
+    "cson": "^7.20.0",
+    "csv": "^6.3.1",
+    "hjson": "^3.2.2",
+    "ini": "^4.1.1",
+    "js-yaml": "^4.1.0",
+    "json5": "^2.2.3"
   },
   "devDependencies": {
     "@types/node": "^20.3.3"

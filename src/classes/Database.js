@@ -1,17 +1,20 @@
 const _set = require('lodash.set');
-const _get = require('lodash.get');
-const _unset = require('lodash.unset');
-const _has = require('lodash.has');
 
 const DatabaseError = require('../classes/DatabaseError');
-const JSONDriver = require('../structures/JSON');
-const YAMLDriver = require('../structures/YAML');
-const BSONDriver = require('../structures/BSON');
+const JSONDriver = require('./drivers/JSON');
+const HJSONDriver = require('./drivers/HJSON');
+const YAMLDriver = require('./drivers/YAML');
+const BSONDriver = require('./drivers/BSON');
+const TOMLDriver = require('./drivers/TOML');
+const JSON5Driver = require('./drivers/JSON5');
+const INIDriver = require('./drivers/INI');
+const CSVDriver = require('./drivers/CSV');
+const CSONDriver = require('./drivers/CSON');
 
 const pkg = require('../../package.json');
 
 /**
- * Nova Database.
+ * Hyper Database.
  * @class Database
  */
 module.exports = class Database {
@@ -25,14 +28,15 @@ module.exports = class Database {
     options.spaces ??= 2;
     options.overwrite ??= false;
 
-    options.driver ??= new JSONDriver(options?.path);
+    options.driver ??= new JSONDriver(options?.path, options.spaces);
 
     if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
     if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
-    if (!(options.driver instanceof JSONDriver) && !(options.driver instanceof YAMLDriver) && !(options.driver instanceof BSONDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
-    
+    const drivers = [JSONDriver, YAMLDriver, BSONDriver, TOMLDriver, HJSONDriver, INIDriver, JSON5Driver, CSVDriver, CSONDriver];
+    if (!drivers.some((driver) => options.driver instanceof driver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
+
     /**
      * Database driver.
      * @type import('../global').hypr.AnyDatabaseDriver
@@ -202,7 +206,7 @@ module.exports = class Database {
     const data = this.get(key);
     if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
 
-    const math = this.math(data, '+', amount, negative);
+    const math = this.math(key, data, '+', amount, negative);
 
     return math;
   };
@@ -222,7 +226,7 @@ module.exports = class Database {
     const data = this.get(key);
     if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
 
-    const math = this.math(data, '-', amount, negative);
+    const math = this.math(key, data, '-', amount, negative);
 
     return math;
   };
@@ -272,10 +276,8 @@ module.exports = class Database {
     const data = this.get(key);
     if (!data) this.set(key, values);
 
-    if (Array.isArray(data)) {
-      if (this.options.overwrite) this.update(key, values);
-      else this.set(key, [...data, ...values]);
-    } else this.set(key, values);
+    if (Array.isArray(data)) this.options.overwrite ? this.update(key, values) : this.set(key, [...data, ...values]);
+    else this.set(key, values);
 
     return void 0;
   };
@@ -301,13 +303,9 @@ module.exports = class Database {
     if (thisArg) callback = callback.bind(thisArg);
 
     let result = [];
-    for (let index = 0; index < data.length; index++) {
-      if (!callback(data[index], index, data)) result.push(data[index]);
-    };
+    for (let index = 0; index < data.length; index++) (!callback(data[index], index, data)) ? result.push(data[index]) : false;
 
-    let parsed = this.update(key, result);
-
-    return parsed;
+    return this.update(key, result);
   };
 
   /**
@@ -355,9 +353,7 @@ module.exports = class Database {
 
     const data = this.toArray().values;
     let array = [];
-    for (let index = 0; index < data.length; index++) {
-      if (callback(data[index], index, data)) array.push(data[index]);
-    };
+    for (let index = 0; index < data.length; index++) (callback(data[index], index, data)) ? array.push(data[index]) : false;
 
     return array;
   };
@@ -397,9 +393,7 @@ module.exports = class Database {
     if (thisArg) callback = callback.bind(thisArg);
 
     const data = this.all();
-    for (let index = 0; index < data.length; index++) {
-      if (callback(prop[index].value, prop[index].key, index, data)) this.update(prop[index].key, value);
-    };
+    for (let index = 0; index < data.length; index++) (callback(prop[index].value, prop[index].key, index, data)) ? this.update(prop[index].key, value) : false
 
     return void 0;
   };
@@ -415,9 +409,7 @@ module.exports = class Database {
     if (thisArg) callback = callback.bind(thisArg);
 
     const data = this.all();
-    for (let index = 0; index < data.length; index++) {
-      if (callback(prop[index].value, prop[index].key, index, data)) this.del(prop[index].key);
-    };
+    for (let index = 0; index < data.length; index++) (callback(prop[index].value, prop[index].key, index, data)) ? this.del(prop[index].key) : false;
 
     return void 0;
   };
@@ -457,22 +449,54 @@ module.exports = class Database {
   };
 
   /**
-   * @type typeof BSONDriver
-   * @readonly
+   * Database Drivers.
    */
-  static BSONDriver = BSONDriver;
-  
-  /**
-   * @type typeof YAMLDriver
-   * @readonly
-   */
-  static YAMLDriver = YAMLDriver;
+  static Drivers = {
+    /**
+     * BSON Driver.
+     */
+    BSON: BSONDriver,
 
-  /**
-  * @type typeof JSONDriver
-  * @readonly
-  */
-  static JSONDriver = JSONDriver;
+    /**
+     * YAML Driver.
+     */
+    YAML: YAMLDriver,
+
+    /**
+     * JSON Driver.
+     */
+    JSON: JSONDriver,
+
+    /**
+     * TOML Driver.
+     */
+    TOML: TOMLDriver,
+
+    /**
+     * HJSON Driver.
+     */
+    HJSON: HJSONDriver,
+
+    /**
+     * JSON5 Driver.
+     */
+    JSON5: JSON5Driver,
+
+    /**
+     * INI Driver.
+     */
+    INI: INIDriver,
+
+    /**
+     * CSV Driver.
+     */
+    CSV: CSVDriver,
+
+    /**
+     * CSON Driver.
+     */
+    CSON: CSONDriver
+  };
 
   /**
    * Database (nova.db) version.

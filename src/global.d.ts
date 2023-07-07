@@ -137,24 +137,49 @@ declare module 'hypr.db' {
     public type<K extends keyof V>(key: K): hypr.DataTypes;
 
     /**
-     * BSON Driver.
+     * Drivers.
      */
-    static readonly BSONDriver: typeof hypr.BSONDriver;
+    static readonly Drivers = {
+      /**
+       * BSON Driver.
+       */
+      BSONDriver: hypr.BSONDriver,
 
-    /**
-     * YAML Driver.
-     */
-    static readonly YAMLDriver: typeof hypr.YAMLDriver;
+      /**
+       * YAML Driver.
+       */
+      YAMLDriver: hypr.YAMLDriver,
 
-    /**
-     * JSON Driver.
-     */
-    static readonly JSONDriver: typeof hypr.JSONDriver;
+      /**
+       * JSON Driver.
+       */
+      JSONDriver: hypr.JSONDriver,
 
-    /**
-     * TOML Driver.
-     */
-    static readonly TOMLDriver: typeof hypr.TOMLDriver;
+      /**
+       * TOML Driver.
+       */
+      TOMLDriver: hypr.TOMLDriver,
+
+      /**
+       * HJSON Driver.
+       */
+      HJSONDriver: hypr.HJSONDriver,
+
+      /**
+       * JSON5 Driver.
+       */
+      JSON5Driver: hypr.JSON5Driver,
+
+      /**
+       * INI Driver.
+       */
+      INIDriver: hypr.INIDriver,
+
+      /**
+       * CSV Driver.
+       */
+      CSVDriver: hypr.CSVDriver
+    }
 
     /**
      * Database version.
@@ -164,13 +189,13 @@ declare module 'hypr.db' {
 }
 
 export declare namespace hypr {
-  type AnyDatabaseDriver = JSONDriver | YAMLDriver | BSONDriver | TOMLDriver;
+  type AnyDatabaseDriver = JSONDriver | YAMLDriver | BSONDriver | TOMLDriver | JSON5Driver | HJSONDriver | INIDriver | CSONDriver | CSVDriver;
   type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
   type DatabaseSignature<V> = { [key in keyof V]: unknown };
   type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
   
   class JSONDriver {
-    public constructor(path?: string);
+    public constructor(path?: string, spaces?: number);
 
     private path: string;
 
@@ -186,62 +211,36 @@ export declare namespace hypr {
     public read(): void;
   }
 
-  class BSONDriver {
+  class BSONDriver extends JSON5Driver {
     public constructor(path?: string);
-
-    private path: string;
-
-    public readonly cache: object;
-
-    public set(key: string, value?: unknown): unknown;
-    public get(key: string): unknown;
-    public delete(key: string): boolean;
-    public exists(key: string): boolean;
-    public update(key: string, value?: unknown): unknown;
-
-    public save(): void;
-    public read(): void;
-
-    static encode(string: string): string;
-    static decode(binary: string): string; 
   }
 
-  class YAMLDriver {
-    public constructor(path?: string);
+  class YAMLDriver extends BSONDriver {
 
-    private path: string;
-
-    public readonly cache: object;
-
-    public set(key: string, value?: unknown): unknown;
-    public get(key: string): unknown;
-    public delete(key: string): boolean;
-    public exists(key: string): boolean;
-    public update(key: string, value?: unknown): unknown;
-
-    public save(): void;
-    public read(): void;
-    public toObject(yaml: string): object;
-    public toYaml(object: object): string;
   }
 
-  class TOMLDriver {
-    public constructor(path?: string);
+  class TOMLDriver extends BSONDriver {
 
-    private path: string;
+  }
 
-    public readonly cache: object;
+  class HJSONDriver extends BSONDriver {
 
-    public set(key: string, value?: unknown): unknown;
-    public get(key: string): unknown;
-    public delete(key: string): boolean;
-    public exists(key: string): boolean;
-    public update(key: string, value?: unknown): unknown;
+  }
 
-    public save(): void;
-    public read(): void;
-    public toToml(object: object): string;
-    public toObject(toml: string): object;
+  class JSON5Driver extends JSONDriver {
+
+  }
+
+  class INIDriver extends BSONDriver {
+
+  }
+
+  class CSONDriver extends BSONDriver {
+
+  }
+
+  class CSVDriver extends BSONDriver {
+
   }
 
   interface DatabaseOptions {
@@ -252,7 +251,7 @@ export declare namespace hypr {
     path?: string;
 
     /**
-     * Spaces. (Only JSON and BSON)
+     * Spaces. (Only JSON and JSON5)
      * @default 2
      */
     spaces?: number;
