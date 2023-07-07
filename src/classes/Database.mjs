@@ -1,4 +1,4 @@
-import _set from 'lodash.set';
+import _set from '../functions/set.mjs';
 
 import DatabaseError from './DatabaseError.mjs';
 import JSONDriver from './drivers/JSON.mjs';

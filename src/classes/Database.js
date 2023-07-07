@@ -1,4 +1,4 @@
-const _set = require('lodash.set');
+const _set = require('../functions/set');
 
 const DatabaseError = require('../classes/DatabaseError');
 const JSONDriver = require('./drivers/JSON');

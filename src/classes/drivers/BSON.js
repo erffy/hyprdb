@@ -1,9 +1,9 @@
-const fs = require('fs-extra');
+const fs = require('node:fs');
 
-const _set = require('lodash.set');
-const _get = require('lodash.get');
-const _unset = require('lodash.unset');
-const _has = require('lodash.has');
+const _set = require('../../functions/set');
+const _get = require('../../functions/get');
+const _unset = require('../../functions/unset');
+const _has = require('../../functions/has');
 
 const DatabaseError = require('../DatabaseError');
 

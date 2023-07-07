@@ -1,6 +1,6 @@
 {
   "name": "hypr.db",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.js",
@@ -14,10 +14,10 @@
     },
     "./esm": "./src/index.mjs",
     "./cjs": "./src/index.js",
-    "./esm/database": "./src/classes/Database.mjs",
-    "./cjs/database": "./src/classes/Database.js",
     "./esm/drivers/*": "./src/classes/drivers/*.mjs",
-    "./cjs/drivers/*": "./src/classes/drivers/*.js"
+    "./cjs/drivers/*": "./src/classes/drivers/*.js",
+    "./esm/functions/*": "./src/functions/*.mjs",
+    "./cjs/functions/*": "./src/functions/*.js"
   },
   "scripts": {
     "start": "clear && node src/index",
@@ -30,7 +30,12 @@
     "bson",
     "yaml",
     "hyper",
-    "hypr"
+    "hypr",
+    "ini",
+    "cson",
+    "json5",
+    "hjson",
+    "toml"
   ],
   "repository": {
     "type": "git",
@@ -39,13 +44,6 @@
   "homepage": "https://github.com/erqeweew/hyprdb",
   "author": "erqewee",
   "license": "MIT",
-  "dependencies": {
-    "lodash.get": "^4.4.2",
-    "lodash.has": "^4.5.2",
-    "lodash.merge": "^4.6.2",
-    "lodash.set": "^4.3.2",
-    "lodash.unset": "^4.5.2"
-  },
   "optionalDependencies": {
     "@iarna/toml": "^2.2.5",
     "bson-ext": "^4.0.3",

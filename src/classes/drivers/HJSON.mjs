@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import module from 'node:module';
 
-import _get from 'lodash.get';
-import _unset from 'lodash.unset';
-import _set from 'lodash.set';
-import _has from 'lodash.has';
-import _merge from 'lodash.merge';
+import _get from '../../functions/get.mjs';
+import _unset from '../../functions/unset.mjs';
+import _set from '../../functions/set.mjs';
+import _has from '../../functions/has.mjs';
+import _merge from '../../functions/merge.mjs';
 
 import DatabaseError from '../DatabaseError.mjs';
 
