@@ -27,10 +27,37 @@ pnpm install hypr.db
 ```ts
 // ESM
 import Database from 'hypr.db';
-
 const db = new Database<{ 'hypr': string }>();
 
 db.set('hypr', 'ok');
+```
+
+### Driver (abstract)
+
+- Create your own driver!
+- Note: Be sure to use a module that converts to Object in your driver.
+```js
+// ESM
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
+
+// CJS
+const Database = require('hypr.db');
+class MyDriver extends Database.Drivers.Driver {
+  constructor() {
+    super(path, name, '.<your-db-ext>');
+  };
+
+  read() {
+    const data = super.read(fnhandler, encoding?); // ? optional
+    Database.Drivers.Driver.Merge(this.cache, data);
+  };
+
+  save() {
+    super.save(data, encoding?); // ? optional
+  };
+};
+
+const db = new Database({ driver: new MyDriver() });
 ```
 
 ### JSON Driver (Default)
@@ -40,8 +67,7 @@ db.set('hypr', 'ok');
 import Database from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
-
+const Database = require('hypr.db');
 const db = new Database();
 
 db.set('hypr', 'ok');
@@ -59,10 +85,10 @@ pnpm install js-yaml
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.YAML();
 const db = new Database({ driver });
 
@@ -81,10 +107,10 @@ pnpm install bson-ext
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.BSON();
 const db = new Database({ driver });
 
@@ -103,10 +129,10 @@ pnpm install @iarna/toml
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.TOML();
 const db = new Database({ driver });
 
@@ -125,10 +151,10 @@ pnpm install hjson
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.HJSON();
 const db = new Database({ driver });
 
@@ -147,10 +173,10 @@ pnpm install json5
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.JSON5();
 const db = new Database({ driver });
 
@@ -169,10 +195,10 @@ pnpm install ini
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.INI();
 const db = new Database({ driver });
 
@@ -191,10 +217,10 @@ pnpm install cson
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.CSON();
 const db = new Database({ driver });
 
@@ -213,10 +239,10 @@ pnpm install csv
 
 ```js
 // ESM
-import Database from 'hypr.db';
+import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.db';
 
 // CJS
-const Database = require('hypr.db'); // or - require('hypr.db/cjs');
+const Database = require('hypr.db');
 const driver = new Database.Drivers.CSV();
 const db = new Database({ driver });
 

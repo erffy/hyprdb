@@ -1,6 +1,9 @@
+import util from 'node:util';
+
 import _set from '../functions/set.mjs';
 
 import DatabaseError from './DatabaseError.mjs';
+import BaseDriver from './drivers/BASE.mjs';
 import JSONDriver from './drivers/JSON.mjs';
 import HJSONDriver from './drivers/HJSON.mjs';
 import YAMLDriver from './drivers/YAML.mjs';
@@ -34,8 +37,7 @@ export default class Database {
     if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
     if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
-    const drivers = [JSONDriver, YAMLDriver, BSONDriver, TOMLDriver, HJSONDriver, INIDriver, JSON5Driver, CSVDriver, CSONDriver];
-    if (!drivers.some((driver) => options.driver instanceof driver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
+    if (!(options.driver instanceof BaseDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
 
     /**
      * Database driver.
@@ -78,35 +80,90 @@ export default class Database {
   };
 
   /**
-   * Get value with index.
-   * @param {number} index 
-   * @returns {unknown}
-   * @example db.valueAt(1);
+   * 
+   * @param {number} keyIndex 
+   * @param {number} valueIndex 
+   * @returns { key: string, value: unknown }
+   * @example db.at(0, 1); db.at(null, 0); db.at(1, null);
    */
-  valueAt(index = 0) {
-    if (typeof index !== 'number') (new DatabaseError(`'${index}' is not Number.`, { name: 'TypeError' })).throw();
+  at(keyIndex = 0, valueIndex = 0) {
+    if (typeof keyIndex !== 'undefined' && typeof keyIndex !== 'number') (new DatabaseError(`'${keyIndex}' is not Number.`, { name: 'TypeError' })).throw();
+    if (typeof valueIndex !== 'undefined' && typeof valueIndex !== 'number') (new DatabaseError(`'${valueIndex}' is not Number.`, { name: 'TypeError' })).throw();
 
-    const data = this.toArray().values;
+    let foundKey = null;
+    let foundValue = null;
 
-    if (index > data.length) (new DatabaseError('Value limit exceeded.', { name: 'RangeError' })).throw();
+    const data = this.toArray();
 
-    return data[index];
+    if (typeof keyIndex === 'number' && keyIndex > 0) {
+      if (keyIndex > data.keys.length) (new DatabaseError('Key limit exceeded.', { name: 'RangeError' })).throw();
+
+      foundKey = data.keys[key];
+    };
+
+    if (typeof valueIndex === 'number' && valueIndex > 0) {
+      if (valueIndex > data.values.length) (new DatabaseError('Value limit exceeded.', { name: 'RangeError' })).throw();
+
+      foundValue = data.values[valueIndex];
+    };
+
+    return { key: foundKey, value: foundValue };
   };
-
   /**
    * Get key with index.
    * @param {number} index 
    * @returns {string}
    * @example db.keyAt(2);
+   * @deprecated Please use 'at' instead.
    */
   keyAt(index = 0) {
-    if (typeof index !== 'number') (new DatabaseError(`'${index}' is not Number.`, { name: 'TypeError' })).throw();
+    return ((util.deprecate(() => this.at(index), '\'keyAt\' is deprecated. Please use \'at\' instead.'))()).key;
+  };
 
-    const data = this.toArray().keys;
+  /**
+   * Get value with index.
+   * @param {number} index 
+   * @returns {string}
+   * @example db.valueAt(2);
+   * @deprecated Please use 'at' instead.
+   */
+  valueAt(index = 0) {
+    return ((util.deprecate(() => this.at(undefined, index), '\'valueAt\' is deprecated. Please use \'at\' instead.'))()).value;
+  };
 
-    if (index > data.length) (new DatabaseError('Key limit exceeded.', { name: 'RangeError' })).throw();
+  /**
+   * Search in database.
+   * @param {(value: unknown, key: string, index: number, object: object) => boolean} callback 
+   * @returns {{ key: string, value: unknown }[]}
+   * @example db.search((value, key, index) => index === 2);
+   */
+  search(callback = () => { }) {
+    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
 
-    return data[index];
+    const collected = [];
+
+    const data = this.toJSON();
+
+    let index = 0;
+    for (const key in data) {
+      if (callback(data[key], key, index, data)) collected.push({ key, value: data[key] });
+
+      index++;
+    };
+
+    return collected;
+  };
+
+  /**
+   * Clone database. (like Backup.)
+   * @param {string} path
+   * @returns {void}
+   * @ignore
+   */
+  clone(path) {
+    if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
+
+    return this.driver.clone(path);
   };
 
   /**
@@ -157,9 +214,7 @@ export default class Database {
    * @example db.exists('nova');
    */
   exists(key) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-
-    return this.driver.exists(key);
+    return this.driver.has(key);
   };
 
   /**
@@ -169,7 +224,7 @@ export default class Database {
    * @example db.has('nova');
    */
   has(key) {
-    return this.exists(key);
+    return this.driver.has(key);
   };
 
   /**
@@ -452,6 +507,11 @@ export default class Database {
    * Database Drivers.
    */
   static Drivers = {
+    /**
+     * Driver.
+     */
+    Driver: BaseDriver,
+
     /**
      * BSON Driver.
      */
