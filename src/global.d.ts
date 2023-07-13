@@ -314,6 +314,12 @@ export declare namespace hypr {
     path?: string;
 
     /**
+     * Transaction Logging.
+     * @default { enabled: true }
+     */
+    transaction?: DatabaseTransactionOptions;
+
+    /**
      * Spaces. (Only JSON and JSON5)
      * @default 2
      */
@@ -336,6 +342,26 @@ export declare namespace hypr {
      * @default JSONDriver
      */
     driver?: AnyDatabaseDriver;
+  }
+
+  interface DatabaseTransactionOptions {
+    /**
+     * Transaction Log Path.
+     * @default process.cwd();
+     */
+    path?: string;
+
+    /**
+     * Transaction Log File Name.
+     * @default 'transaction-history'
+     */
+    name?: string;
+
+    /**
+     * Transaction State.
+     * @default false
+     */
+    enabled?: boolean;
   }
 
   interface DatabaseMap {

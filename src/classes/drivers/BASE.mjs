@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import module from 'node:module';
 
 import _get from '../../functions/get.mjs';
@@ -28,7 +28,7 @@ export default class BaseDriver {
     if (!path.endsWith(extension)) path += extension;
 
     const __path = path.substring(0, path.lastIndexOf('/'));
-    if (!fs.existsSync(__path)) fs.mkdirSync(__path, { recursive: true });
+    if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
 
     /**
      * Database Path.
@@ -140,19 +140,20 @@ export default class BaseDriver {
     if (typeof path !== 'string') throw new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' });
 
     const __path = path.substring(0, path.lastIndexOf('/'));
-    if (!fs.existsSync(__path)) fs.mkdirSync(__path, { recursive: true });
+    if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
 
-    fs.writeFileSync(path, bind, { encoding: 'utf8' });
+    writeFileSync(path, bind, { encoding: 'utf8' });
 
     return void 0;
   };
 
   /**
    * Save cache to database file.
+   * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding 
    * @returns {void}
    */
   save(data, encoding) {
-    fs.writeFileSync(this.path, data, { encoding });
+    writeFileSync(this.path, data, { encoding });
 
     return void 0;
   };

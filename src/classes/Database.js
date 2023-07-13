@@ -1,7 +1,9 @@
-const _set = require('../functions/set');
+const EventEmitter = require('node:events');
+
+const DatabaseTransaction = require('./DatabaseTransaction');
 
 const DatabaseError = require('../classes/DatabaseError');
-const Driver = require('./drivers/BASE');
+const BaseDriver = require('./drivers/BASE');
 const JSONDriver = require('./drivers/JSON');
 const HJSONDriver = require('./drivers/HJSON');
 const YAMLDriver = require('./drivers/YAML');
@@ -12,7 +14,7 @@ const INIDriver = require('./drivers/INI');
 const CSVDriver = require('./drivers/CSV');
 const CSONDriver = require('./drivers/CSON');
 
-const pkg = require('../../package.json');
+const { version } = require('../../package.json');
 
 /**
  * Hyper Database.
@@ -29,13 +31,16 @@ module.exports = class Database {
     options.spaces ??= 2;
     options.overwrite ??= false;
 
+    options.transaction ??= {};
+    options.transaction.enabled ??= false;
+
     options.driver ??= new JSONDriver(options?.path, options.spaces);
 
     if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
     if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
     if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
 
-    if (!(options.driver instanceof Driver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
+    if (!(options.driver instanceof BaseDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
 
     /**
      * Database driver.
@@ -45,7 +50,16 @@ module.exports = class Database {
     this.driver = options.driver;
 
     /**
-     * Database options.
+     * Watcher.
+     * @type EventEmitter
+     * @readonly
+     * @protected
+     */
+    this.watcher = new EventEmitter({ captureRejections: true });
+    this.watcher.setMaxListeners(0);
+
+    /**
+     * Database Options.
      * @type typeof options
      * @private
      */
@@ -57,6 +71,11 @@ module.exports = class Database {
      * @readonly
      */
     this.size = this.toArray().keys.length;
+
+    if (options.transaction?.enabled) {
+      const transaction = new DatabaseTransaction(options.transaction?.path, options.transaction?.name);
+      this.watcher.on('transaction', (_case) => transaction.save(_case, 'Automated by Database.'));
+    };
   };
 
   /**
@@ -73,6 +92,8 @@ module.exports = class Database {
 
     this.driver.set(key, value);
     this.size++;
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'SET');
 
     return value;
   };
@@ -107,6 +128,7 @@ module.exports = class Database {
 
     return { key: foundKey, value: foundValue };
   };
+
   /**
    * Get key with index.
    * @param {number} index 
@@ -115,7 +137,7 @@ module.exports = class Database {
    * @deprecated Please use 'at' instead.
    */
   keyAt(index = 0) {
-    return ((util.deprecate(() => this.at(index), '\'keyAt\' is deprecated. Please use \'at\' instead.'))()).key;
+    return ((deprecate(() => this.at(index), '\'keyAt\' is deprecated. Please use \'at\' instead.'))()).key;
   };
 
   /**
@@ -126,7 +148,7 @@ module.exports = class Database {
    * @deprecated Please use 'at' instead.
    */
   valueAt(index = 0) {
-    return ((util.deprecate(() => this.at(undefined, index), '\'valueAt\' is deprecated. Please use \'at\' instead.'))()).value;
+    return ((deprecate(() => this.at(undefined, index), '\'valueAt\' is deprecated. Please use \'at\' instead.'))()).value;
   };
 
   /**
@@ -161,6 +183,8 @@ module.exports = class Database {
   clone(path) {
     if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'CLONE');
+
     return this.driver.clone(path);
   };
 
@@ -174,6 +198,8 @@ module.exports = class Database {
   update(key, value) {
     if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'UPDATE');
+
     return this.driver.update(key, value);
   };
 
@@ -185,6 +211,8 @@ module.exports = class Database {
    */
   get(key) {
     if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET');
 
     return this.driver.get(key);
   };
@@ -199,8 +227,9 @@ module.exports = class Database {
     if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
 
     const parsed = this.driver.delete(key);
-
     if (parsed) this.size--;
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'DELETE');
 
     return parsed;
   };
@@ -212,6 +241,8 @@ module.exports = class Database {
    * @example db.exists('nova');
    */
   exists(key) {
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'CHECK');
+
     return this.driver.has(key);
   };
 
@@ -222,7 +253,7 @@ module.exports = class Database {
    * @example db.has('nova');
    */
   has(key) {
-    return this.driver.has(key);
+    return this.exists(key);
   };
 
   /**
@@ -234,12 +265,12 @@ module.exports = class Database {
   all(amount = 0) {
     if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
 
-    const data = Object.keys(this.driver.cache);
-
     let results = [];
-    for (const key of data) results.push({ key, value: this.driver.get(key) });
+    for (const key in this.driver.cache) results.push({ key, value: this.driver.cache[key] });
 
     if (amount > 0) results = results.splice(0, amount);
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET_ALL');
 
     return results;
   };
@@ -261,6 +292,8 @@ module.exports = class Database {
 
     const math = this.math(key, data, '+', amount, negative);
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'ADD');
+
     return math;
   };
 
@@ -280,6 +313,8 @@ module.exports = class Database {
     if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
 
     const math = this.math(key, data, '-', amount, negative);
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'SUB');
 
     return math;
   };
@@ -313,6 +348,8 @@ module.exports = class Database {
 
     if (!negative && result < 1) result = 0;
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', `MATH[${operator}]`);
+
     return this.update(key, result);
   };
 
@@ -331,6 +368,8 @@ module.exports = class Database {
 
     if (Array.isArray(data)) this.options.overwrite ? this.update(key, values) : this.set(key, [...data, ...values]);
     else this.set(key, values);
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'PUSH');
 
     return void 0;
   };
@@ -358,6 +397,8 @@ module.exports = class Database {
     let result = [];
     for (let index = 0; index < data.length; index++) (!callback(data[index], index, data)) ? result.push(data[index]) : false;
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'PULL');
+
     return this.update(key, result);
   };
 
@@ -376,6 +417,8 @@ module.exports = class Database {
       values.push(prop.value);
     };
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET_ALL_ARRAY');
+
     return { keys, values };
   };
 
@@ -388,7 +431,9 @@ module.exports = class Database {
     const data = this.all();
 
     const obj = {};
-    for (const prop of data) _set(obj, prop.key, prop.value);
+    for (const prop of data) obj[prop.key] = prop.value;
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET_ALL_JSON');
 
     return obj;
   };
@@ -407,6 +452,8 @@ module.exports = class Database {
     const data = this.toArray().values;
     let array = [];
     for (let index = 0; index < data.length; index++) (callback(data[index], index, data)) ? array.push(data[index]) : false;
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FILTER');
 
     return array;
   };
@@ -431,6 +478,8 @@ module.exports = class Database {
       if (callback(data[index], index, data)) prop = data[index];
     };
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FIND');
+
     return prop;
   };
 
@@ -448,6 +497,8 @@ module.exports = class Database {
     const data = this.all();
     for (let index = 0; index < data.length; index++) (callback(prop[index].value, prop[index].key, index, data)) ? this.update(prop[index].key, value) : false
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FIND_UPDATE');
+
     return void 0;
   };
 
@@ -464,6 +515,8 @@ module.exports = class Database {
     const data = this.all();
     for (let index = 0; index < data.length; index++) (callback(prop[index].value, prop[index].key, index, data)) ? this.del(prop[index].key) : false;
 
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FIND_DELETE');
+
     return void 0;
   };
 
@@ -479,6 +532,8 @@ module.exports = class Database {
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) callback(data[index].value, data[index].key, index, data);
+
+    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'MAP');
 
     return void 0;
   };
@@ -508,7 +563,7 @@ module.exports = class Database {
     /**
      * Driver.
      */
-    Driver,
+    Driver: BaseDriver,
 
     /**
      * BSON Driver.
@@ -561,5 +616,5 @@ module.exports = class Database {
    * @type string
    * @readonly
    */
-  static version = pkg.version;
+  static version = version;
 };

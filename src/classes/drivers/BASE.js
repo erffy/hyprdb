@@ -1,4 +1,4 @@
-const fs = require('node:fs');
+const { writeFileSync, mkdirSync, existsSync } = require('node:fs');
 
 const _set = require('../../functions/set');
 const _get = require('../../functions/get');
@@ -16,7 +16,7 @@ module.exports = class BaseDriver {
     path ??= process.cwd();
     name ??= 'database';
     extension ??= '.json';
-    
+
     if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
     if (typeof name !== 'string') (new DatabaseError(`'${name}' is not String.`, { name: 'TypeError' })).throw();
     if (typeof extension !== 'string') (new DatabaseError(`'${extension}' is not String.`, { name: 'TypeError' })).throw();
@@ -25,7 +25,7 @@ module.exports = class BaseDriver {
     if (!path.endsWith(extension)) path += extension;
 
     const __path = path.substring(0, path.lastIndexOf('/'));
-    if (!fs.existsSync(__path)) fs.mkdirSync(__path, { recursive: true });
+    if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
 
     /**
      * Database Path.
@@ -82,7 +82,7 @@ module.exports = class BaseDriver {
    */
   edit(key, value) {
     if (typeof key !== 'string') throw new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' });
-    
+
     if (!this.has(key)) return this.set(key, value);
 
     this.delete(key);
@@ -128,11 +128,29 @@ module.exports = class BaseDriver {
   };
 
   /**
+   * Clone.
+   * @param {string} path 
+   * @param {unknown} bind 
+   * @returns {void}
+   */
+  clone(path, bind) {
+    if (typeof path !== 'string') throw new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' });
+
+    const __path = path.substring(0, path.lastIndexOf('/'));
+    if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
+
+    writeFileSync(path, bind, { encoding: 'utf8' });
+
+    return void 0;
+  };
+
+  /**
    * Save cache to database file.
+   * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding 
    * @returns {void}
    */
   save(data, encoding) {
-    fs.writeFileSync(this.path, data, { encoding });
+    writeFileSync(this.path, data, { encoding });
 
     return void 0;
   };
@@ -185,4 +203,10 @@ module.exports = class BaseDriver {
    * @type typeof DatabaseError
    */
   static Error = DatabaseError;
+
+  /**
+   * Require.
+   * @type typeof require
+   */
+  static require = require;
 };
