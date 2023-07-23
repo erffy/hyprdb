@@ -14,7 +14,7 @@ pnpm install hypr.db
 
 - Faster: Optimized for you.
 - Lightweight: Low size.
-- Multi Support: We are supporting YAML, JSON, HJSON, JSON5, BSON, INI, TOML and CSV!
+- Multi Support: Supports YAML, JSON, HJSON, JSON5, BSON, INI, TOML and CSV!
 - TypeScript typing: For Advanced Efficiency.
 - Written with ESM: For better performance.
 - Small: Faster download.
@@ -44,16 +44,15 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 const Database = require('hypr.db');
 class MyDriver extends Database.Drivers.Driver {
   constructor() {
-    super(path, name, '.<your-db-ext>');
+    super(path?, name?, '.<your-db-ext>'); // ? optional
   };
 
   read() {
-    const data = super.read(fnhandler, encoding?); // ? optional
-    Database.Drivers.Driver.Merge(this.cache, data);
+    super.read(fnhandler, encoding?); // ? optional
   };
 
   save() {
-    super.save(data, encoding?); // ? optional
+    super.save(data);
   };
 };
 
@@ -89,8 +88,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.YAML();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.YAML() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -111,8 +109,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.BSON();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.BSON() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -133,8 +130,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.TOML();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.TOML() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -155,8 +151,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.HJSON();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.HJSON() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -177,8 +172,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.JSON5();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.JSON5() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -199,8 +193,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.INI();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.INI() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -221,8 +214,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.CSON();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.CSON() });
 
 db.set('hypr', 'ok');
 db.get('hypr');
@@ -243,8 +235,7 @@ import Database from 'hypr.db'; // or - import Database, { Drivers } from 'hypr.
 
 // CJS
 const Database = require('hypr.db');
-const driver = new Database.Drivers.CSV();
-const db = new Database({ driver });
+const db = new Database({ driver: new Database.Drivers.CSV() });
 
 db.set('hypr', 'ok');
 db.get('hypr');

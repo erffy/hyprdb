@@ -1,22 +1,19 @@
 import Driver from './BASE.mjs';
 
-import module from 'node:module';
-const require = module.createRequire(import.meta.url);
-
 export default class JSON5Driver extends Driver {
   /**
    * Create new JSON5-Based database.
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database', spaces = 2) {
+  constructor(path, name, spaces = 2) {
     super(path, name, '.json5');
 
     /**
      * JSON5.
      * @private
      */
-    this.json5 = (require('json5')).JSON5;
+    this.json5 = Driver.require('json5');
 
     /**
      * Database spaces.
@@ -31,7 +28,7 @@ export default class JSON5Driver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.json5.stringify(this.cache, null, this.spaces));
+    super.clone(path, this.json5.stringify(this.json(), null, this.spaces));
 
     return void 0;
   };
@@ -41,7 +38,7 @@ export default class JSON5Driver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.json5.stringify(this.cache, null, this.spaces), 'utf8');
+    super.save(this.json5.stringify(this.json(), null, this.spaces), 'utf8');
 
     return void 0;
   };
@@ -51,8 +48,7 @@ export default class JSON5Driver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.json5.parse, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(this.json5.parse, 'utf8');
 
     return void 0;
   };

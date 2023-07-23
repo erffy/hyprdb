@@ -1,6 +1,6 @@
 {
   "name": "hypr.db",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.js",
@@ -15,9 +15,7 @@
     "./esm": "./src/index.mjs",
     "./cjs": "./src/index.js",
     "./esm/drivers/*": "./src/classes/drivers/*.mjs",
-    "./cjs/drivers/*": "./src/classes/drivers/*.js",
-    "./esm/functions/*": "./src/functions/*.mjs",
-    "./cjs/functions/*": "./src/functions/*.js"
+    "./cjs/drivers/*": "./src/classes/drivers/*.js"
   },
   "scripts": {
     "start": "clear && node src/index",
@@ -55,7 +53,7 @@
     "json5": "^2.2.3"
   },
   "devDependencies": {
-    "@types/node": "^20.3.3"
+    "@types/node": "^20.4.4"
   },
   "publishConfig": {
     "access": "public"

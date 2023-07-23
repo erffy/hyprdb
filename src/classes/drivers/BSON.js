@@ -6,7 +6,7 @@ module.exports = class BSONDriver extends Driver {
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database') {
+  constructor(path, name) {
     super(path, name, '.bson');
 
     /**
@@ -15,14 +15,14 @@ module.exports = class BSONDriver extends Driver {
      */
     this.bson = require('bson-ext');
   };
-  
+
   /**
    * Clone database.
    * @param {string} path 
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.bson.serialize(this.cache));
+    super.clone(path, this.bson.serialize(this.json()));
 
     return void 0;
   };
@@ -32,7 +32,7 @@ module.exports = class BSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.bson.serialize(this.cache), 'binary');
+    super.save(this.bson.serialize(this.json()), 'binary');
 
     return void 0;
   };
@@ -42,8 +42,7 @@ module.exports = class BSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = fs.readFileSync(this.path, { encoding: 'binary' });
-    Driver.merge(this.cache, this.bson.deserialize(data));
+    super.read(this.bson.deserialize);
 
     return void 0;
   };

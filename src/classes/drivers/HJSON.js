@@ -6,7 +6,7 @@ module.exports = class HJSONDriver extends Driver {
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database') {
+  constructor(path, name) {
     super(path, name, '.hjson');
 
     /**
@@ -22,7 +22,7 @@ module.exports = class HJSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.hjson.stringify(this.cache));
+    super.clone(path, this.hjson.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +32,7 @@ module.exports = class HJSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.hjson.stringify(this.cache), 'utf8');
+    super.save(this.hjson.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,8 +42,7 @@ module.exports = class HJSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.hjson.parse, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(this.hjson.parse, 'utf8');
 
     return void 0;
   };

@@ -6,7 +6,7 @@ module.exports = class JSON5Driver extends Driver {
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database', spaces = 2) {
+  constructor(path, name, spaces = 2) {
     super(path, name, '.json5');
 
     /**
@@ -21,14 +21,14 @@ module.exports = class JSON5Driver extends Driver {
      */
     this.spaces = spaces;
   };
-
+  
   /**
    * Clone database.
    * @param {string} path 
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.json5.stringify(this.cache, null, this.spaces));
+    super.clone(path, this.json5.stringify(this.json(), null, this.spaces));
 
     return void 0;
   };
@@ -38,7 +38,7 @@ module.exports = class JSON5Driver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.json5.stringify(this.cache, null, this.spaces), 'utf8');
+    super.save(this.json5.stringify(this.json(), null, this.spaces), 'utf8');
 
     return void 0;
   };
@@ -48,8 +48,7 @@ module.exports = class JSON5Driver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.json5.parse, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(this.json5.parse, 'utf8');
 
     return void 0;
   };

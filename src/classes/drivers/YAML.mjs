@@ -1,22 +1,19 @@
 import Driver from './BASE.mjs';
 
-import module from 'node:module';
-const require = module.createRequire(import.meta.url);
-
 export default class YAMLDriver extends Driver {
   /**
    * Create new YAML-Based database.
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database') {
+  constructor(path, name) {
     super(path, name, '.yaml');
 
     /**
      * YAML.
      * @private
      */
-    this.yaml = require('js-yaml');
+    this.yaml = Driver.require('js-yaml');
   };
   
   /**
@@ -25,7 +22,7 @@ export default class YAMLDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.yaml.load(this.cache));
+    super.clone(path, this.yaml.load(this.json()));
 
     return void 0;
   };
@@ -35,7 +32,7 @@ export default class YAMLDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.yaml.dump(this.cache), 'utf8');
+    super.save(this.yaml.dump(this.json()), 'utf8');
 
     return void 0;
   };
@@ -45,8 +42,7 @@ export default class YAMLDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.yaml.load, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(this.yaml.load, 'utf8');
 
     return void 0;
   };

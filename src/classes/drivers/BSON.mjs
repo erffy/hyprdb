@@ -1,22 +1,19 @@
 import Driver from './BASE.mjs';
 
-import module from 'node:module';
-const require = module.createRequire(import.meta.url);
-
 export default class BSONDriver extends Driver {
   /**
    * Create new BSON-Based database.
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database') {
+  constructor(path, name) {
     super(path, name, '.bson');
 
     /**
      * BSON.
      * @private
      */
-    this.bson = require('bson-ext');
+    this.bson = Driver.require('bson-ext');
   };
 
   /**
@@ -25,7 +22,7 @@ export default class BSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.bson.serialize(this.cache));
+    super.clone(path, this.bson.serialize(this.json()));
 
     return void 0;
   };
@@ -35,7 +32,7 @@ export default class BSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.bson.serialize(this.cache), 'binary');
+    super.save(this.bson.serialize(this.json()));
 
     return void 0;
   };
@@ -45,8 +42,7 @@ export default class BSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.bson.deserialize);
-    Driver.merge(this.cache, data);
+    super.read(this.bson.deserialize);
 
     return void 0;
   };

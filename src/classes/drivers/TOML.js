@@ -6,7 +6,7 @@ module.exports = class TOMLDriver extends Driver {
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database') {
+  constructor(path, name) {
     super(path, name, '.toml');
 
     /**
@@ -15,14 +15,14 @@ module.exports = class TOMLDriver extends Driver {
      */
     this.toml = require('@iarna/toml');
   };
-
+  
   /**
    * Clone database.
    * @param {string} path 
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.toml.stringify(this.cache));
+    super.clone(path, this.toml.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +32,7 @@ module.exports = class TOMLDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.toml.stringify(this.cache), 'utf8');
+    super.save(this.toml.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,8 +42,7 @@ module.exports = class TOMLDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.toml.parse, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(this.toml.parse, 'utf8');
 
     return void 0;
   };

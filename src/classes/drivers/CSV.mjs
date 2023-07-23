@@ -1,22 +1,19 @@
 import Driver from './BASE.mjs';
 
-import module from 'node:module';
-const require = module.createRequire(import.meta.url);
-
 export default class CSVDriver extends Driver {
   /**
    * Create new CSV-Based database.
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database') {
+  constructor(path, name) {
     super(path, name, '.csv');
 
     /**
      * CSV.
      * @private
      */
-    this.csv = require('csv');
+    this.csv = Driver.require('csv');
   };
   
   /**
@@ -25,7 +22,7 @@ export default class CSVDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.csv.stringify(this.cache));
+    super.clone(path, this.csv.stringify(this.json()));
 
     return void 0;
   };
@@ -35,7 +32,7 @@ export default class CSVDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.csv.stringify(this.cache), 'utf8');
+    super.save(this.csv.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -45,8 +42,7 @@ export default class CSVDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(this.csv.parse, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(this.csv.parse, 'utf8');
 
     return void 0;
   };

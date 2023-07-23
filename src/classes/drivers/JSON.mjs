@@ -6,7 +6,7 @@ export default class JSONDriver extends Driver {
    * @param {string} path 
    * @constructor
    */
-  constructor(path, name = 'database', spaces = 2) {
+  constructor(path, name, spaces = 2) {
     super(path, name, '.json');
 
     /**
@@ -22,7 +22,7 @@ export default class JSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, JSON.stringify(this.cache, null, this.spaces));
+    super.clone(path, JSON.stringify(this.json(), null, this.spaces));
 
     return void 0;
   };
@@ -31,8 +31,8 @@ export default class JSONDriver extends Driver {
    * Save cache to database file.
    * @returns {void}
    */
-  save() {
-    super.save(Buffer.from(JSON.stringify(this.cache, null, this.spaces)), 'utf8');
+  save() {    
+    super.save(JSON.stringify(this.json(), null, this.spaces));
 
     return void 0;
   };
@@ -42,8 +42,7 @@ export default class JSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    const data = super.read(JSON.parse, 'utf8');
-    Driver.merge(this.cache, data);
+    super.read(JSON.parse, 'utf8');
 
     return void 0;
   };

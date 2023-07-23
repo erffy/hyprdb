@@ -1,8 +1,5 @@
-const EventEmitter = require('node:events');
-
-const DatabaseTransaction = require('./DatabaseTransaction');
-
 const DatabaseError = require('../classes/DatabaseError');
+
 const BaseDriver = require('./drivers/BASE');
 const JSONDriver = require('./drivers/JSON');
 const HJSONDriver = require('./drivers/HJSON');
@@ -14,7 +11,7 @@ const INIDriver = require('./drivers/INI');
 const CSVDriver = require('./drivers/CSV');
 const CSONDriver = require('./drivers/CSON');
 
-const { version } = require('../../package.json');
+const pkg = require('../../package.json');
 
 /**
  * Hyper Database.
@@ -23,7 +20,7 @@ const { version } = require('../../package.json');
 module.exports = class Database {
   /**
    * Create new Database.
-   * @param {import('../global').hypr.DatabaseOptions} options
+   * @param {DatabaseOptions} options
    * @constructor
    */
   constructor(options = {}) {
@@ -31,32 +28,12 @@ module.exports = class Database {
     options.spaces ??= 2;
     options.overwrite ??= false;
 
-    options.transaction ??= {};
-    options.transaction.enabled ??= false;
+    if (typeof options.size != 'number') throw new DatabaseError(`'${options.size}' is not number.`, { name: 'TypeError' });
+    if (typeof options.overwrite != 'boolean') throw new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' });
+    if (typeof options.spaces != 'number') throw new DatabaseError(`'${options.spaces}' is not number.`, { name: 'TypeError' });
 
-    options.driver ??= new JSONDriver(options?.path, options.spaces);
-
-    if (typeof options.size !== 'number') (new DatabaseError(`'${options.size}' is not Number.`, { name: 'TypeError' })).throw();
-    if (typeof options.overwrite !== 'boolean') (new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' })).throw();
-    if (typeof options.spaces !== 'number') (new DatabaseError(`'${options.spaces}' is not Number.`, { name: 'TypeError' })).throw();
-
-    if (!(options.driver instanceof BaseDriver)) (new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' })).throw();
-
-    /**
-     * Database driver.
-     * @type import('../global').hypr.AnyDatabaseDriver
-     * @readonly
-     */
-    this.driver = options.driver;
-
-    /**
-     * Watcher.
-     * @type EventEmitter
-     * @readonly
-     * @protected
-     */
-    this.watcher = new EventEmitter({ captureRejections: true });
-    this.watcher.setMaxListeners(0);
+    options.driver ??= new JSONDriver(options?.path, options?.name, options.spaces);
+    if (!(options.driver instanceof BaseDriver)) throw new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' });
 
     /**
      * Database Options.
@@ -66,213 +43,91 @@ module.exports = class Database {
     this.options = options;
 
     /**
+     * Database driver.
+     * @type AnyDatabaseDriver
+     * @readonly
+     */
+    this.driver = this.options.driver;
+
+    /**
      * Database size.
      * @type number
      * @readonly
      */
-    this.size = this.toArray().keys.length;
-
-    if (options.transaction?.enabled) {
-      const transaction = new DatabaseTransaction(options.transaction?.path, options.transaction?.name);
-      this.watcher.on('transaction', (_case) => transaction.save(_case, 'Automated by Database.'));
-    };
+    this.size = this.array({ type: 'keys' }).length;
   };
 
   /**
-   * Set data to database.
-   * @param {string} key 
-   * @param {unknown} value 
-   * @returns {unknown}
-   * @example db.set('nova.version', '1.0.0');
+   * Assign this database to other database.
+   * @param {class} other 
+   * @param {{ callbackName?: string }} options
+   * @returns {object}
    */
-  set(key, value) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
+  assign(other, options = {}) {
+    if (typeof options != 'object') throw new DatabaseError(`'${options}' is not object.`, { name: 'TypeError' });
+    if (!other?.constructor) throw new DatabaseError(`'${other}' is not constructor.`, { name: 'InvalidInstance' });
 
-    if (this.options.size > 0 && (this.size >= this.options.size)) (new DatabaseError('Database limit exceeded.', { name: 'RangeError' })).throw();
+    options.callbackName ??= 'set';
 
-    this.driver.set(key, value);
-    this.size++;
+    const obj = {};
 
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'SET');
+    const data = this.json();
+    for (const key in data) {
+      if (typeof other[options.callbackName] != 'function') throw new DatabaseError(`'${options.callbackName}' is not function.`, { name: 'TypeError' });
 
-    return value;
+      other[options.callbackName](key, data[key]);
+      obj[key] = true;
+    };
+
+    return obj;
   };
 
   /**
-   * 
+   * Get key or value with index.
    * @param {number} keyIndex 
    * @param {number} valueIndex 
-   * @returns { key: string, value: unknown }
+   * @returns {string | unknown | { key: string, value: unknown }}
    * @example db.at(0, 1); db.at(null, 0); db.at(1, null);
    */
   at(keyIndex = 0, valueIndex = 0) {
-    if (typeof keyIndex !== 'undefined' && typeof keyIndex !== 'number') (new DatabaseError(`'${keyIndex}' is not Number.`, { name: 'TypeError' })).throw();
-    if (typeof valueIndex !== 'undefined' && typeof valueIndex !== 'number') (new DatabaseError(`'${valueIndex}' is not Number.`, { name: 'TypeError' })).throw();
+    if (typeof keyIndex != 'undefined' && typeof keyIndex != 'number') throw new DatabaseError(`'${keyIndex}' is not Number or Undefined.`, { name: 'TypeError' });
+    if (typeof valueIndex != 'undefined' && typeof valueIndex != 'number') throw new DatabaseError(`'${valueIndex}' is not Number or Undefined.`, { name: 'TypeError' });
 
-    let foundKey = null;
-    let foundValue = null;
+    if (typeof keyIndex === 'number') return ((this.array({ type: 'keys' }))[keyIndex]);
+    else if (typeof valueIndex === 'number') return ((this.array({ type: 'values' }))[valueIndex]);
 
-    const data = this.toArray();
+    const { keys, values } = this.array();
 
-    if (typeof keyIndex === 'number' && keyIndex > 0) {
-      if (keyIndex > data.keys.length) (new DatabaseError('Key limit exceeded.', { name: 'RangeError' })).throw();
-
-      foundKey = data.keys[key];
-    };
-
-    if (typeof valueIndex === 'number' && valueIndex > 0) {
-      if (valueIndex > data.values.length) (new DatabaseError('Value limit exceeded.', { name: 'RangeError' })).throw();
-
-      foundValue = data.values[valueIndex];
-    };
-
-    return { key: foundKey, value: foundValue };
-  };
-
-  /**
-   * Get key with index.
-   * @param {number} index 
-   * @returns {string}
-   * @example db.keyAt(2);
-   * @deprecated Please use 'at' instead.
-   */
-  keyAt(index = 0) {
-    return ((deprecate(() => this.at(index), '\'keyAt\' is deprecated. Please use \'at\' instead.'))()).key;
-  };
-
-  /**
-   * Get value with index.
-   * @param {number} index 
-   * @returns {string}
-   * @example db.valueAt(2);
-   * @deprecated Please use 'at' instead.
-   */
-  valueAt(index = 0) {
-    return ((deprecate(() => this.at(undefined, index), '\'valueAt\' is deprecated. Please use \'at\' instead.'))()).value;
-  };
-
-  /**
-   * Search in database.
-   * @param {(value: unknown, key: string, index: number, object: object) => boolean} callback 
-   * @returns {{ key: string, value: unknown }[]}
-   * @example db.search((value, key, index) => index === 2);
-   */
-  search(callback = () => { }) {
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    const collected = [];
-
-    const data = this.toJSON();
-
-    let index = 0;
-    for (const key in data) {
-      if (callback(data[key], key, index, data)) collected.push({ key, value: data[key] });
-
-      index++;
-    };
-
-    return collected;
-  };
-
-  /**
-   * Clone database. (like Backup.)
-   * @param {string} path
-   * @returns {void}
-   * @ignore
-   */
-  clone(path) {
-    if (typeof path !== 'string') (new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' })).throw();
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'CLONE');
-
-    return this.driver.clone(path);
-  };
-
-  /**
-   * Update data from database.
-   * @param {string} key 
-   * @param {unknown} value 
-   * @returns {unknown}
-   * @example db.update('key', 'newValue');
-   */
-  update(key, value) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'UPDATE');
-
-    return this.driver.update(key, value);
-  };
-
-  /**
-   * Get data from database.
-   * @param {string} key 
-   * @returns {unknown}
-   * @example db.get('nova.version');
-   */
-  get(key) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET');
-
-    return this.driver.get(key);
-  };
-
-  /**
-   * Delete data from database.
-   * @param {string} key 
-   * @returns {boolean}
-   * @example db.del('nova');
-   */
-  del(key) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-
-    const parsed = this.driver.delete(key);
-    if (parsed) this.size--;
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'DELETE');
-
-    return parsed;
-  };
-
-  /**
-   * Checks if path is a direct property of object.
-   * @param {string} key 
-   * @returns {boolean}
-   * @example db.exists('nova');
-   */
-  exists(key) {
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'CHECK');
-
-    return this.driver.has(key);
-  };
-
-  /**
-   * Checks if path is a direct property of object.
-   * @param {string} key 
-   * @returns {boolean}
-   * @example db.has('nova');
-   */
-  has(key) {
-    return this.exists(key);
+    return { key: keys[keyIndex], value: values[valueIndex] };
   };
 
   /**
    * Get all data from database.
    * @param {number} amount 
-   * @returns {{ key: string, value: unknown }[]}
+   * @returns {Array<{ key: string, value: unknown }>}
    * @example db.all();
    */
   all(amount = 0) {
-    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
+    if (typeof amount != 'number') throw new DatabaseError(`'${amount}' is not number.`, { name: 'TypeError' });
+
+    const obj = this.json();
 
     let results = [];
-    for (const key in this.driver.cache) results.push({ key, value: this.driver.cache[key] });
+    for (const key in obj) results.push({ key, value: obj[key] });
 
     if (amount > 0) results = results.splice(0, amount);
 
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET_ALL');
-
     return results;
+  };
+
+  /**
+   * Convert database to array.
+   * @param {{ type?: 'all' | 'keys' | 'values' }} options
+   * @returns {Array<string> | Array<unknown> | { keys: Array<string>, values: Array<unknown> } | void}
+   * @example db.array(); db.array({ type: 'keys' }); db.array({ type: 'values' });
+   */
+  array(options) {
+    return this.driver.array(options);
   };
 
   /**
@@ -284,17 +139,210 @@ module.exports = class Database {
    * @example db.add('result', 3);
    */
   add(key, amount = 1, negative = false) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
+    return this.math(key, this.get(key), '+', amount, negative);
+  };
 
-    const data = this.get(key);
-    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
+  /**
+   * Clone database. (like Backup.)
+   * @param {string} path
+   * @returns {void}
+   * @ignore
+   */
+  clone(path) {
+    return this.driver.clone(path);
+  };
 
-    const math = this.math(key, data, '+', amount, negative);
+  /**
+   * Copy database.
+   * @returns {Database}
+   */
+  copy() {
+    const data = this.all();
 
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'ADD');
+    const options = { ...this.options };
+    options.path = `${this.options.path}/${this.options.name}-copy.${this.options.driver.extension}`;
 
-    return math;
+    const db = new this.constructor(options);
+    for (const { key, value } of data) db.set(key, value);
+
+    return db;
+  };
+
+  /**
+   * Concat databases.
+   * @param {...Database} databases
+   * @returns {Database} New Concatted database.
+   */
+  concat(...databases) {
+    const db = this.copy();
+
+    for (const database of databases) {
+      if (!(database instanceof Database)) throw new DatabaseError(`'${database}' is not valid database.`, { name: 'UnknownInstance' });
+
+      const data = database.all();
+      for (const { key, value } of data) db.set(key, value);
+    };
+
+    return db;
+  };
+
+  /**
+   * Delete data from database.
+   * @param {string} key 
+   * @returns {boolean}
+   * @example db.del('hypr');
+   */
+  del(key) {
+    const parsed = this.driver.unset(key);
+    if (parsed) this.size--;
+
+    return parsed;
+  };
+
+  /**
+   * Determines whether all the members of an array satisfy the specified test.
+   * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback 
+   * @returns {boolean}
+   */
+  every(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    const data = this.all();
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
+
+      if (!callback(value, key, index, this)) return false;
+    };
+
+    return true;
+  };
+
+  /**
+   * Checks if path is a direct property of object.
+   * @param {string} key 
+   * @returns {boolean}
+   * @example db.exists('hypr');
+   */
+  exists(key) {
+    return this.driver.has(key);
+  };
+
+  /**
+   * A function that accepts up to four arguments. The filter method calls the predicate function one time for each element in the array.
+   * @param {(value: unknown, index: number, Database: this) => boolean} callback
+   * @returns {Array<unknown>}
+   * @example db.filter((prop) => prop === '1.1');
+   */
+  filter(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    const collected = new this.constructor(this.options);
+
+    const data = this.all();
+
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
+
+      if (callback(value, key, index, this)) collected.set(key, value);
+    };
+
+    return collected;
+  };
+
+  /**
+   * Find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
+   * @param {(value: unknown, index: number, Database: this) => boolean} callback 
+   * @returns {boolean | unknown}
+   * @example db.find((prop) => prop === '1.0');
+   */
+  find(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    const data = this.array({ type: 'values' });
+
+    let collected = false;
+    for (let index = 0; (!collected && index < data.length); index++) {
+      const value = data[index];
+
+      if (callback(value, index, this)) collected = value;
+    };
+
+    return collected;
+  };
+
+  /**
+   * Find and update.
+   * @param {unknown} newValue Value to update keys.
+   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
+   * @returns {void}
+   */
+  findUpdate(newValue, callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    const data = this.all();
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
+
+      if (callback(value, key, index, this)) this.update(key, newValue);
+    };
+
+    return void 0;
+  };
+
+  /**
+   * Find and delete.
+   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
+   * @returns {boolean}
+   */
+  findDelete(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    let state;
+
+    const data = this.all();
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
+
+      if (callback(value, key, index, this)) state = this.del(key);
+    };
+
+    return state;
+  };
+
+  /**
+   * Get data from database.
+   * @param {string} key 
+   * @returns {unknown}
+   * @example db.get('hypr.version');
+   */
+  get(key) {
+    return this.driver.get(key);
+  };
+
+  /**
+   * Checks if path is a direct property of object.
+   * @param {string} key 
+   * @returns {boolean}
+   * @example db.has('hypr');
+   */
+  has(key) {
+    return this.exists(key);
+  };
+
+  /**
+   * Set data to database.
+   * @param {string} key 
+   * @param {unknown} value 
+   * @returns {unknown}
+   * @example db.set('hypr.version', '1.0.0');
+   */
+  set(key, value) {
+    if (this.options.size != 0 && (this.size > this.options.size)) throw new DatabaseError('Database limit exceeded.', { name: 'RangeError' });
+
+    this.driver.set(key, value);
+    this.size++;
+
+    return value;
   };
 
   /**
@@ -306,243 +354,63 @@ module.exports = class Database {
    * @example db.sub('result', 5);
    */
   sub(key, amount = 1, negative = false) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof amount !== 'number') (new DatabaseError(`'${amount}' is not Number.`, { name: 'TypeError' })).throw();
-
-    const data = this.get(key);
-    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
-
-    const math = this.math(key, data, '-', amount, negative);
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'SUB');
-
-    return math;
+    return this.math(key, this.get(key), '-', amount, negative);
   };
 
   /**
-   * Do Math operations easily!
-   * @param {number} numberOne 
-   * @param {string} operator 
-   * @param {number} numberTwo 
-   * @returns {number}
-   * @example db.math('result', 10, '/', 2);
+   * Search in database.
+   * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback 
+   * @returns {{ key: string, value: unknown }[]}
+   * @example db.search((value, key, index) => key === 'hypr');
    */
-  math(key, numberOne, operator, numberTwo, negative = false) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof operator !== 'string') (new DatabaseError(`'${operator}' is not String.`, { name: 'TypeError' })).throw();
-    if (typeof numberOne !== 'number') (new DatabaseError(`'${numberOne}' is not Number.`, { name: 'TypeError' })).throw();
-    if (typeof numberTwo !== 'number') (new DatabaseError(`'${numberTwo}' is not Number.`, { name: 'TypeError' })).throw();
+  search(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
 
-    if (!this.exists(key)) this.set(key, 0);
+    const collected = [];
 
-    const data = this.get(key);
-    if (typeof data !== 'number') (new DatabaseError(`'${data}' is not Number.`, { name: 'TypeError' })).throw();
+    const data = this.driver.json();
 
-    let result = 0;
-    if (operator === '+') result = numberOne + numberTwo;
-    else if (operator === '-') result = numberOne - numberTwo;
-    else if (operator === '*') result = numberOne * numberTwo;
-    else if (operator === '**') result = numberOne ** numberTwo;
-    else if (operator === '/') result = numberOne / numberTwo;
-    else if (operator === '%') result = numberOne % numberTwo;
+    let index = 0;
+    for (const key in data) {
+      if (callback(data[key], key, index, this)) collected.push({ key, value: data[key] });
 
-    if (!negative && result < 1) result = 0;
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', `MATH[${operator}]`);
-
-    return this.update(key, result);
-  };
-
-  /**
-   * Push data to array.
-   * @param {string} key 
-   * @param  {...unknown} values 
-   * @returns {void}
-   * @example db.push('versions', '1.0', '1.1');
-   */
-  push(key, ...values) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-
-    const data = this.get(key);
-    if (!data) this.set(key, values);
-
-    if (Array.isArray(data)) this.options.overwrite ? this.update(key, values) : this.set(key, [...data, ...values]);
-    else this.set(key, values);
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'PUSH');
-
-    return void 0;
-  };
-
-  /**
-   * Pulls data from array.
-   * @param {string} key 
-   * @param {(value: unknown, index: number, array: unknown[]) => boolean} callback
-   * @returns {unknown[]}
-   * @example db.pull('versions', (prop) => prop === '1.0'));
-   */
-  pull(key, callback = () => { }, thisArg) {
-    if (typeof key !== 'string') (new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' })).throw();
-
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    if (!this.exists(key)) return null;
-
-    const data = this.get(key);
-
-    if (!Array.isArray(data)) (new DatabaseError(`'${data}' is not Array.`, { name: 'TypeError' })).throw();
-
-    if (thisArg) callback = callback.bind(thisArg);
-
-    let result = [];
-    for (let index = 0; index < data.length; index++) (!callback(data[index], index, data)) ? result.push(data[index]) : false;
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'PULL');
-
-    return this.update(key, result);
-  };
-
-  /**
-   * Convert database to array.
-   * @returns {{ keys: string[], values: unknown[] }}
-   * @example db.toArray();
-   */
-  toArray() {
-    const values = [];
-    const keys = [];
-
-    const data = this.all();
-    for (const prop of data) {
-      keys.push(prop.key);
-      values.push(prop.value);
+      index++;
     };
 
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET_ALL_ARRAY');
-
-    return { keys, values };
+    return collected;
   };
 
   /**
-   * Convert database to object.
-   * @returns {{}}
-   * @example db.toJSON();
+   * Determines whether the specified callback function returns true for any element of an array.
+   * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback
+   * @returns {boolean}
    */
-  toJSON() {
+  some(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
     const data = this.all();
-
-    const obj = {};
-    for (const prop of data) obj[prop.key] = prop.value;
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'GET_ALL_JSON');
-
-    return obj;
-  };
-
-  /**
-   * A function that accepts up to three arguments. The filter method calls the predicate function one time for each element in the array.
-   * @param {(value: unknown, index: number, array: unknown[]) => boolean} callback
-   * @returns {unknown[]}
-   * @example db.filter((prop) => prop === '1.1');
-   */
-  filter(callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    if (thisArg) callback = callback.bind(thisArg);
-
-    const data = this.toArray().values;
-    let array = [];
-    for (let index = 0; index < data.length; index++) (callback(data[index], index, data)) ? array.push(data[index]) : false;
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FILTER');
-
-    return array;
-  };
-
-  /**
-   * find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
-   * @param {(value: unknown, index: number, array: unknown[]) => boolean} callback 
-   * @returns {boolean | unknown}
-   * @example db.find((prop) => prop === '1.0');
-   */
-  find(callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    if (thisArg) callback = callback.bind(thisArg);
-
-    const data = this.toArray().values;
-
-    let prop = false;
     for (let index = 0; index < data.length; index++) {
-      if (prop) break;
+      const { key, value } = data[index];
 
-      if (callback(data[index], index, data)) prop = data[index];
+      if (callback(value, key, index, this)) return true;
     };
 
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FIND');
-
-    return prop;
+    return false;
   };
 
   /**
-   * 
-   * @param {unknown} value Value to update keys.
-   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
-   * @returns {void}
+   * Convert database to json.
+   * @returns {object}
    */
-  findUpdate(value, callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    if (thisArg) callback = callback.bind(thisArg);
-
-    const data = this.all();
-    for (let index = 0; index < data.length; index++) (callback(prop[index].value, prop[index].key, index, data)) ? this.update(prop[index].key, value) : false
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FIND_UPDATE');
-
-    return void 0;
-  };
-
-  /**
-   * 
-   * @param {(value: unknown, key: string, index: number, array: Array<{ key: string, value: unknown }>)} callback 
-   * @returns {void}
-   */
-  findDelete(callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    if (thisArg) callback = callback.bind(thisArg);
-
-    const data = this.all();
-    for (let index = 0; index < data.length; index++) (callback(prop[index].value, prop[index].key, index, data)) ? this.del(prop[index].key) : false;
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'FIND_DELETE');
-
-    return void 0;
-  };
-
-  /**
-   * 
-   * @param {(value: unknown, key: string, index: number, array: Array<unknown>)} callback 
-   * @returns {void}
-   */
-  map(callback = () => { }, thisArg) {
-    if (callback && typeof callback !== 'function') (new DatabaseError(`'${callback}' is not Function.`, { name: 'TypeError' })).throw();
-
-    if (thisArg) callback = callback.bind(thisArg);
-
-    const data = this.all();
-    for (let index = 0; index < data.length; index++) callback(data[index].value, data[index].key, index, data);
-
-    if (this.options.transaction.enabled) this.watcher.emit('transaction', 'MAP');
-
-    return void 0;
+  json() {
+    return this.driver.json();
   };
 
   /**
    * Get type of stored data in key.
    * @param {string} key
-   * @returns {"string" | "number" | "bigint" | "boolean" | "symbol" | "array" | "undefined" | "object" | "function" | "NaN" | "finite"}
-   * @example db.type('nova');
+   * @returns {'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite'}
+   * @example db.type('hypr');
    */
   type(key) {
     const data = this.get(key);
@@ -554,6 +422,137 @@ module.exports = class Database {
     else __type = typeof data;
 
     return __type;
+  };
+
+  /**
+   * Do Math operations easily!
+   * @param {string} operator 
+   * @param {number} count
+   * @returns {number}
+   * @example db.math('result', '/', 2);
+   */
+  math(key, operator, count, negative = false) {
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof operator != 'string') throw new DatabaseError(`'${operator}' is not string.`, { name: 'TypeError' });
+    if (typeof count != 'number') throw new DatabaseError(`'${count}' is not number.`, { name: 'TypeError' });
+
+    if (!this.exists(key)) this.set(key, 0);
+
+    const data = this.get(key);
+    if (typeof data != 'number') throw new DatabaseError(`'${data}' is not number.`, { name: 'TypeError' });
+
+    let result = data;
+    if (operator === '+') result += count;
+    else if (operator === '-') result -= count;
+    else if (operator === '*') result *= count;
+    else if (operator === '**') result **= count;
+    else if (operator === '/') result /= count;
+    else if (operator === '%') result %= count;
+
+    if (!negative && result < 0) result = 0;
+
+    return this.update(key, result);
+  };
+
+  /**
+   * A function that accepts up to four arguments. The map method calls the callbackfn function one time for each element in the array.
+   * Calls a defined callback function on each element of an array, and returns an array that contains the results.
+   * @param {(value: unknown, key: string, index: number, Database: this) => unknown} callback 
+   * @returns {Database}
+   */
+  map(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    const db = new this.constructor(this.options);
+
+    const data = this.all();
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
+
+      if (callback(value, key, index, this)) db.set(key, value);
+    };
+
+    return db;
+  };
+
+  /**
+   * Push data to array.
+   * @param {string} key 
+   * @param  {...unknown} values 
+   * @returns {void}
+   * @example db.push('versions', '1.0', '1.1');
+   */
+  push(key, ...values) {
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+
+    const data = this.get(key);
+    if (!data) this.set(key, values);
+
+    if (Array.isArray(data)) {
+      if (this.options.overwrite) this.update(key, values);
+      else this.set(key, [...data, ...values]);
+    } else this.set(key, values);
+
+    return void 0;
+  };
+
+  /**
+   * Pulls data from array.
+   * @param {string} key 
+   * @param {(value: unknown, index: number, Database: this) => boolean} callback
+   * @returns {Array<unknown>}
+   * @example db.pull('versions', (prop) => prop === '1.0'));
+   */
+  pull(key, callback = () => { }) {
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    if (!this.exists(key)) return null;
+
+    const data = this.get(key);
+
+    if (!Array.isArray(data)) throw new DatabaseError(`'${data}' is not array.`, { name: 'TypeError' });
+
+    let result = [];
+    for (let index = 0; index < data.length; index++) {
+      const value = data[index];
+
+      if (!callback(value, index, this)) result.push(value);
+    };
+
+    return this.update(key, result);
+  };
+
+  /**
+   * Database partitioning.
+   * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback
+   * @returns {Array<Database>}
+   */
+  partition(callback = () => { }) {
+    if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
+
+    const tables = [new this.constructor(this.options), new this.constructor(this.options)];
+
+    const data = this.all();
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
+
+      if (callback(value, key, index, this)) tables[0].set(key, value);
+      else tables[1].set(key, value);
+    };
+
+    return tables;
+  };
+
+  /**
+   * Update data from database.
+   * @param {string} key 
+   * @param {unknown} value 
+   * @returns {unknown}
+   * @example db.update('key', 'newValue');
+   */
+  update(key, value) {
+    return this.driver.update(key, value);
   };
 
   /**
@@ -612,9 +611,9 @@ module.exports = class Database {
   };
 
   /**
-   * Database (nova.db) version.
+   * Database (hypr.db) version.
    * @type string
    * @readonly
    */
-  static version = version;
+  static version = pkg.version;
 };

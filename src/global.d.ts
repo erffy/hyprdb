@@ -4,16 +4,21 @@ import _unset from './functions/unset.mjs';
 import _set from './functions/set.mjs';
 import _merge from './functions/merge.mjs';
 
-declare module 'hypr.db' {
-  export default class Database<V extends hypr.DatabaseSignature<V> = hypr.DatabaseMap> {
-    public constructor(options?: hypr.DatabaseOptions);
-    
-    private options: hypr.DatabaseOptions;
-    
+export declare module 'hypr.db' {
+  export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
+    /**
+     * Create new Database.
+     * @param options Database options.
+     * @constructor
+     */
+    public constructor(options?: DatabaseOptions);
+
+    private options: DatabaseOptions;
+
     /**
      * Database driver.
      */
-    public readonly driver: hypr.AnyDatabaseDriver;
+    public readonly driver: AnyDatabaseDriver;
 
     /**
      * Database size.
@@ -22,63 +27,18 @@ declare module 'hypr.db' {
 
 
     /**
-     * Set data to database.
-     * @param key Key
-     * @param value Value
+     * Assign this database to other database.
+     * @param other Database class.
+     * @param options Assign options.
      */
-    public set<K extends keyof V>(key: K, value: V[K]): V[K];
+    public assign(other: unknown, options?: { callbackName?: string }): object;
 
     /**
      * Get data with index.
      * @param keyIndex Key index.
      * @param valueIndex Value index.
      */
-    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): { key: string, value: unknown };
-
-    /**
-     * Get value with index.
-     * @param index Index
-     * @deprecated Please use 'at' instead.
-     */
-    public valueAt<I extends number>(index?: I | number): V;
-
-    /**
-     * Get key with index.
-     * @param index Index
-     * @deprecated Please use 'at' instead.
-     */
-    public keyAt<I extends number>(index?: I | number): string;
-
-    /**
-     * Update entry from database. If key is not exists, creates new key.
-     * @param key Key
-     * @param value New Value
-     */
-    public update<K extends keyof V>(key: K, value: V[K]): V[K];
-
-    /**
-     * Get data from database.
-     * @param key Key
-     */
-    public get<K extends keyof V>(key: K): V[K];
-
-    /**
-     * Delete data from database.
-     * @param key Key
-     */
-    public del<K extends keyof V>(key: K): boolean;
-
-    /**
-     * Check key is exists in database.
-     * @param key Key
-     */
-    public exists<K extends keyof V>(key: K): boolean;
-
-    /**
-     * Check key is exists in database.
-     * @param key Key
-     */
-    public has<K extends keyof V>(key: K): boolean;
+    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): void | string | unknown | { key: string, value: unknown };
 
     /**
      * Get all data from database.
@@ -87,12 +47,97 @@ declare module 'hypr.db' {
     public all<K extends keyof V>(amount?: number): Array<{ key: K, value: V[K] }>;
 
     /**
-     * Addition in database over key.
+     * Convert database to array.
+     * @param options Array options.
+     */
+    public array<K extends keyof V>(options?: { type: 'all' | 'keys' | 'values' }): void | Array<K> | Array<V[K]> | { keys: Array<K>, values: Array<V[K]> };
+
+    /**
+     * Add specified number of values to the specified key.
      * @param key Key
      * @param amount Amount to add.
      * @param negative Set it to be negative.
      */
     public add<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
+
+    /**
+     * Clone database. (like Backup)
+     * @param path Clone path.
+     */
+    public clone<K extends keyof V>(path?: K): void;
+
+    /**
+     * Copy database.
+     */
+    public copy(): Database<V>;
+
+    /**
+     * Concat databases.
+     * @param databases Hypr databases to concat.
+     */
+    public concat(...databases: Array<Database<V>>): Database<V>;
+
+    /**
+     * Delete data from database.
+     * @param key Key
+     */
+    public del<K extends keyof V>(key: K): boolean;
+
+    /**
+     * Determines whether all the members of an array satisfy the specified test.
+     * @param callback 
+     */
+    public every<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): boolean;
+
+    /**
+     * Check key is exists in database.
+     * @param key Key
+     */
+    public exists<K extends keyof V>(key: K): boolean;
+
+    /**
+     * A function that accepts up to four arguments. The filter method calls the predicate function one time for each element in the array.
+     * @param callback
+     */
+    public filter<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Array<V[K]>;
+
+    /**
+     * Find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
+     * @param callback Condition
+     */
+    public find<K extends keyof V>(callback?: (value: V[K], index: number, Database: this) => boolean): boolean | V[K];
+
+    /**
+     * Find the first value that satisfies the condition and update to new value.
+     * @param value New value to replace.
+     * @param callback
+     */
+    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], key: K, index: number, Database: this) => boolean): void;
+
+    /**
+     * Find the first value that satisfies the condition and delete it.
+     * @param callback
+     */
+    public findDelete<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): void;
+
+    /**
+     * Get data from database.
+     * @param key Key
+     */
+    public get<K extends keyof V>(key: K): V[K];
+
+    /**
+     * Check key is exists in database.
+     * @param key Key
+     */
+    public has<K extends keyof V>(key: K): boolean;
+
+    /**
+     * Set data to database.
+     * @param key Key
+     * @param value Value
+     */
+    public set<K extends keyof V>(key: K, value?: V[K]): V[K];
 
     /**
      * Subtraction in database over key.
@@ -103,15 +148,45 @@ declare module 'hypr.db' {
     public sub<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
 
     /**
+     * Search in database.
+     * @param callback
+     */
+    public search<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Array<{ key: string, value: V }>;
+    
+    /**
+     * Determines whether the specified callback function returns true for any element of an array.
+     * @param callback 
+     */
+    public some<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): boolean;
+
+    /**
+     * Convert database to json.
+     */
+    public json(): object;
+
+    /**
+     * Get data type of stored value in key.
+     * @param key Key
+     */
+    public type<K extends keyof V>(key: K): DataTypes;
+
+    /**
      * Do math in easily.
      * @param key Key
-     * @param numberOne First number.
      * @param operator Operator.
-     * @param numberTwo Second number.
+     * @param count Count.
      * @param negative Set it to be negative.
      */
-    public math<K extends keyof V>(key: K, numberOne: number, operator: hypr.MathOperations, numberTwo: number, negative?: boolean): number;
+    public math<K extends keyof V>(key: K, operator: MathOperations, count: number, negative?: boolean): number;
 
+    /**
+     * A function that accepts up to four arguments. The map method calls the callbackfn function one time for each element in the array.
+     * Calls a defined callback function on each element of an array, and returns an array that contains the results.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
+     * @param callback Condition
+     */
+    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => unknown): void;
+    
     /**
      * Push values to array.
      * @param key Key
@@ -122,59 +197,23 @@ declare module 'hypr.db' {
     /**
      * Pulls data from array.
      * @param key Key
-     * @param callback Condition 
+     * @param callback
      */
-    public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): Array<V[K]>;
+    public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, Database: this) => boolean): Array<V[K]>;
 
     /**
-     * Convert database to array.
+     * Database partitioning.
+     * @param callback 
      */
-    public toArray<K extends keyof V>(): { keys: Array<K>, values: Array<V[K]> };
-
-    /**
-     * Convert database to object.
-     */
-    public toJSON(): hypr.DatabaseMap;
-
-    /**
-     * Filter database.
-     * @param callback Condition
-     */
-    public filter<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): Array<V[K]>;
-
-    /**
-     * Find the first value that satisfies the condition.
-     * @param callback Condition
-     */
-    public find<K extends keyof V>(callback?: (value: V[K], index: number, array: Array<V[K]>) => boolean): boolean | Array<V[K]>;
-
-    /**
-     * Find the first value that satisfies the condition and update to new value.
-     * @param value New value to replace.
-     * @param callback Condition
-     */
-    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], key: K, index: number, array: Array<V[K]>) => boolean): void;
-
-    /**
-     * Find the first value that satisfies the condition and delete it.
-     * @param callback Condition
-     */
-    public findDelete<K extends keyof V>(callback?: (value: V[K], key: K, index: number, array: Array<V[K]>) => boolean): void;
-
-    /**
-     * Map database.
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
-     * @param callback Condition
-     */
-    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, array: Array<V[K]>) => V[K]): void;
-
-    /**
-     * Get data type of stored value in key.
-     * @param key Key
-     */
-    public type<K extends keyof V>(key: K): hypr.DataTypes;
-
+    public partition<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Array<Database<V>>;
     
+    /**
+     * Update entry from database. If key is not exists, creates new key.
+     * @param key Key
+     * @param value New Value
+     */
+    public update<K extends keyof V>(key: K, value?: V[K]): V[K];
+
     /**
      * Drivers.
      */
@@ -182,47 +221,47 @@ declare module 'hypr.db' {
       /**
        * Driver.
        */
-      Driver: hypr.Driver,
+      Driver,
 
       /**
        * BSON Driver.
        */
-      BSONDriver: hypr.BSONDriver,
+      BSON,
 
       /**
        * YAML Driver.
        */
-      YAMLDriver: hypr.YAMLDriver,
+      YAML,
 
       /**
        * JSON Driver.
        */
-      JSONDriver: hypr.JSONDriver,
+      JSON,
 
       /**
        * TOML Driver.
        */
-      TOMLDriver: hypr.TOMLDriver,
+      TOML,
 
       /**
        * HJSON Driver.
        */
-      HJSONDriver: hypr.HJSONDriver,
+      HJSON,
 
       /**
        * JSON5 Driver.
        */
-      JSON5Driver: hypr.JSON5Driver,
+      JSON5,
 
       /**
        * INI Driver.
        */
-      INIDriver: hypr.INIDriver,
+      INI,
 
       /**
        * CSV Driver.
        */
-      CSVDriver: hypr.CSVDriver
+      CSV
     }
 
     /**
@@ -235,32 +274,54 @@ declare module 'hypr.db' {
    * Database Drivers.
    */
   export const Drivers = Database.Drivers;
-}
 
-export declare namespace hypr {
-  type AnyDatabaseDriver = Driver | JSONDriver | YAMLDriver | BSONDriver | TOMLDriver | JSON5Driver | HJSONDriver | INIDriver | CSONDriver | CSVDriver;
-  type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
-  type DatabaseSignature<V> = { [key in keyof V]: unknown };
-  type Encoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'ucs-2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex';
-  type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
-  
-  abstract class Driver {
+  export type AnyDatabaseDriver = Driver | JSONDriver | YAMLDriver | BSONDriver | TOMLDriver | JSON5Driver | HJSONDriver | INIDriver | CSONDriver | CSVDriver;
+  export type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
+  export type DatabaseSignature<V> = { [key in keyof V]: unknown };
+  export type Encoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'ucs-2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex';
+  export type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
+
+  abstract class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map<string, unknown> {
+    /**
+     * Create new driver.
+     * @param path Driver path.
+     * @param name Driver name. (file)
+     * @param extension Driver extension.
+     * @constructor
+     */
     public constructor(path?: string, name?: string, extension?: string);
 
+    /**
+     * Database path.
+     */
     protected readonly path: string;
+    /**
+     * Database name.
+     */
     protected readonly name: string;
+    /**
+     * Database extension.
+     */
     protected readonly extension: string;
 
-    public readonly cache: object;
+    public set<K extends keyof V>(key: K, value?: V[K]): V[K];
+    public get<K extends keyof V>(key: K): V[K];
+    public has<K extends keyof V>(key: K): boolean;
+    public edit<K extends keyof V>(key: K, value?: V[K]): V[K];
+    public unset<K extends keyof V>(key: K): boolean;
+    public clone<K extends keyof V>(path: K): void;
 
-    public set(key: string, value?: unknown): unknown;
-    public get(key: string): unknown;
-    public has(key: string): boolean;
-    public edit(key: string, value?: unknown): unknown;
-    public unset(key: string): boolean;
-    public clone(path: string): void;
-
+    /**
+     * Save database.
+     * @param data Data to save database file.
+     * @param encoding Encoding
+     */
     public save(data: unknown, encoding?: Encoding): void;
+    /**
+     * Read database and save to cache.
+     * @param handler Data handler.
+     * @param encoding Encoding.
+     */
     public read(handler: (data: unknown) => unknown, encoding?: Encoding): void;
 
     static readonly set = _set;
@@ -270,54 +331,52 @@ export declare namespace hypr {
     static readonly unset = _unset;
   }
 
-  class JSONDriver extends Driver {
+  class JSON extends Driver {
     public constructor(path?: string, name?: string, spaces?: number);
   }
 
-  class BSONDriver extends Driver {
+  class BSON extends Driver {
     public constructor(path?: string, name?: string);
   }
 
-  class YAMLDriver extends BSONDriver {
+  class YAML extends BSON {
 
   }
 
-  class TOMLDriver extends BSONDriver {
+  class TOML extends BSON {
 
   }
 
-  class HJSONDriver extends BSONDriver {
+  class HJSON extends BSON {
 
   }
 
-  class JSON5Driver extends JSONDriver {
+  class JSON5 extends JSON {
 
   }
 
-  class INIDriver extends BSONDriver {
+  class INI extends BSON {
 
   }
 
-  class CSONDriver extends BSONDriver {
+  class CSON extends BSON {
 
   }
 
-  class CSVDriver extends BSONDriver {
+  class CSV extends BSON {
 
   }
 
-  interface DatabaseOptions {
+  /**
+   * Database Options.
+   * @interface
+   */
+  export interface DatabaseOptions {
     /**
      * Database Path.
      * @default database.json
      */
     path?: string;
-
-    /**
-     * Transaction Logging.
-     * @default { enabled: true }
-     */
-    transaction?: DatabaseTransactionOptions;
 
     /**
      * Spaces. (Only JSON and JSON5)
@@ -344,27 +403,7 @@ export declare namespace hypr {
     driver?: AnyDatabaseDriver;
   }
 
-  interface DatabaseTransactionOptions {
-    /**
-     * Transaction Log Path.
-     * @default process.cwd();
-     */
-    path?: string;
-
-    /**
-     * Transaction Log File Name.
-     * @default 'transaction-history'
-     */
-    name?: string;
-
-    /**
-     * Transaction State.
-     * @default false
-     */
-    enabled?: boolean;
-  }
-
-  interface DatabaseMap {
+  export interface DatabaseMap {
     [key: string]: unknown;
   }
 }
