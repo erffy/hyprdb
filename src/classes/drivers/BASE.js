@@ -331,10 +331,4 @@ module.exports = class BaseDriver extends Map {
    * @type typeof DatabaseError
    */
   static Error = DatabaseError;
-
-  /**
-   * Require.
-   * @type typeof require
-   */
-  static require = require;
 };

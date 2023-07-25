@@ -1,5 +1,10 @@
 const Driver = require('./BASE');
 
+let csv;
+try {
+  csv = require('csv');
+} catch (error) {};
+
 module.exports = class CSVDriver extends Driver {
   /**
    * Create new CSV-Based database.
@@ -9,11 +14,7 @@ module.exports = class CSVDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.csv');
 
-    /**
-     * CSV.
-     * @private
-     */
-    this.csv = require('csv');
+    if (!csv) throw new Driver.Error(`Please install 'csv' module to use this driver.`, { name: 'MissingModule' });
   };
   
   /**
@@ -22,7 +23,7 @@ module.exports = class CSVDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.csv.stringify(this.json()));
+    super.clone(path, csv.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +33,7 @@ module.exports = class CSVDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.csv.stringify(this.json()), 'utf8');
+    super.save(csv.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,7 +43,7 @@ module.exports = class CSVDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.csv.parse, 'utf8');
+    super.read(csv.parse, 'utf8');
 
     return void 0;
   };

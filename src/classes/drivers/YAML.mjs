@@ -1,5 +1,9 @@
 import Driver from './BASE.mjs';
 
+let yaml;
+await import('yaml').then((module) => yaml = { dump: module.default.stringify, load: module.default.parse }).catch((error) => {});
+if (!yaml) await import('js-yaml').then((module) => yaml = module.default).catch((error) => {});
+
 export default class YAMLDriver extends Driver {
   /**
    * Create new YAML-Based database.
@@ -9,11 +13,7 @@ export default class YAMLDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.yaml');
 
-    /**
-     * YAML.
-     * @private
-     */
-    this.yaml = Driver.require('js-yaml');
+    if (!yaml) throw new Driver.Error(`Please install 'yaml' or 'js-yaml' module to use this driver.`, { name: 'MissingModule' });
   };
   
   /**
@@ -22,7 +22,7 @@ export default class YAMLDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.yaml.load(this.json()));
+    super.clone(path, yaml.load(this.json()));
 
     return void 0;
   };
@@ -32,7 +32,7 @@ export default class YAMLDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.yaml.dump(this.json()), 'utf8');
+    super.save(yaml.dump(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,7 +42,7 @@ export default class YAMLDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.yaml.load, 'utf8');
+    super.read(yaml.load, 'utf8');
 
     return void 0;
   };

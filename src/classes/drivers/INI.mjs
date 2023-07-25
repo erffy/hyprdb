@@ -1,5 +1,7 @@
 import Driver from "./BASE.mjs";
 
+const ini = await import('ini').then((module) => module.default).catch((error) => {});
+
 export default class INIDriver extends Driver {
   /**
    * Create new INI-Based database.
@@ -9,11 +11,7 @@ export default class INIDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.ini');
 
-    /**
-     * INI.
-     * @private
-     */
-    this.ini = Driver.require('ini');
+    if (!ini) throw new Driver.Error(`Please install 'ini' module to use this driver.`, { name: 'MissingModule' });
   };
 
   /**
@@ -22,7 +20,7 @@ export default class INIDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.ini.stringify(this.json()));
+    super.clone(path, ini.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +30,7 @@ export default class INIDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.ini.stringify(this.json()), 'utf8');
+    super.save(ini.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,7 +40,7 @@ export default class INIDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.ini.parse, 'utf8');
+    super.read(ini.parse, 'utf8');
 
     return void 0;
   };

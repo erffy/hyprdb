@@ -1,5 +1,7 @@
 import Driver from './BASE.mjs';
 
+const toml = await import('@iarna/toml').then((module) => module.default).catch((error) => {});
+
 export default class TOMLDriver extends Driver {
   /**
    * Create new TOML-Based database.
@@ -9,11 +11,7 @@ export default class TOMLDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.toml');
 
-    /**
-     * TOML.
-     * @private
-     */
-    this.toml = Driver.require('@iarna/toml');
+    if (!toml) throw new Driver.Error(`Please install '@iarna/toml' module to use this driver.`, { name: 'MissingModule' });
   };
   
   /**
@@ -22,7 +20,7 @@ export default class TOMLDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.toml.stringify(this.json()));
+    super.clone(path, toml.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +30,7 @@ export default class TOMLDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.toml.stringify(this.json()), 'utf8');
+    super.save(toml.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,7 +40,7 @@ export default class TOMLDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.toml.parse, 'utf8');
+    super.read(toml.parse, 'utf8');
 
     return void 0;
   };

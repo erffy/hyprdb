@@ -1,5 +1,9 @@
 import Driver from './BASE.mjs';
 
+let bson;
+await import('bson-ext').then((module) => bson = module).catch((error) => {});
+if (!bson) await import('bson').then((module) => bson = module.default).catch((error) => {});
+
 export default class BSONDriver extends Driver {
   /**
    * Create new BSON-Based database.
@@ -9,11 +13,7 @@ export default class BSONDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.bson');
 
-    /**
-     * BSON.
-     * @private
-     */
-    this.bson = Driver.require('bson-ext');
+    if (!bson) throw new Driver.Error(`Please install 'bson' or 'bson-ext' module to use this driver.`, { name: 'MissingModule' });
   };
 
   /**
@@ -22,7 +22,7 @@ export default class BSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.bson.serialize(this.json()));
+    super.clone(path, bson.serialize(this.json()));
 
     return void 0;
   };
@@ -32,7 +32,7 @@ export default class BSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.bson.serialize(this.json()));
+    super.save(bson.serialize(this.json()));
 
     return void 0;
   };
@@ -42,7 +42,7 @@ export default class BSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.bson.deserialize);
+    super.read(bson.deserialize);
 
     return void 0;
   };

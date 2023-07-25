@@ -1,10 +1,4 @@
-import _get from './functions/get.mjs';
-import _has from './functions/has.mjs';
-import _unset from './functions/unset.mjs';
-import _set from './functions/set.mjs';
-import _merge from './functions/merge.mjs';
-
-export declare module 'hypr.db' {
+declare module 'hypr.db' {
   export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
     /**
      * Create new Database.
@@ -217,6 +211,7 @@ export declare module 'hypr.db' {
     /**
      * Drivers.
      */
+    // @ts-ignore
     static readonly Drivers = {
       /**
        * Driver.
@@ -273,9 +268,10 @@ export declare module 'hypr.db' {
   /**
    * Database Drivers.
    */
+  // @ts-ignore
   export const Drivers = Database.Drivers;
 
-  export type AnyDatabaseDriver = Driver | JSONDriver | YAMLDriver | BSONDriver | TOMLDriver | JSON5Driver | HJSONDriver | INIDriver | CSONDriver | CSVDriver;
+  export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI | CSON | CSV;
   export type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
   export type DatabaseSignature<V> = { [key in keyof V]: unknown };
   export type Encoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'ucs-2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex';
@@ -304,11 +300,14 @@ export declare module 'hypr.db' {
      */
     protected readonly extension: string;
 
-    public set<K extends keyof V>(key: K, value?: V[K]): V[K];
+    // @ts-ignore
+    public set<K extends keyof V>(key: K, value?: V[K], autoWrite?: boolean): V[K];
+    // @ts-ignore
     public get<K extends keyof V>(key: K): V[K];
+    // @ts-ignore
     public has<K extends keyof V>(key: K): boolean;
     public edit<K extends keyof V>(key: K, value?: V[K]): V[K];
-    public unset<K extends keyof V>(key: K): boolean;
+    public unset<K extends keyof V>(key: K, autoWrite?: boolean): boolean;
     public clone<K extends keyof V>(path: K): void;
 
     /**
@@ -323,12 +322,6 @@ export declare module 'hypr.db' {
      * @param encoding Encoding.
      */
     public read(handler: (data: unknown) => unknown, encoding?: Encoding): void;
-
-    static readonly set = _set;
-    static readonly get = _get;
-    static readonly has = _has;
-    static readonly merge = _merge;
-    static readonly unset = _unset;
   }
 
   class JSON extends Driver {
@@ -394,7 +387,13 @@ export declare module 'hypr.db' {
      * Database Overwrite. (Only 'push' method.)
      * @default true
      */
-    overwrite?: boolean;
+    overWrite?: boolean;
+
+    /**
+     * Database Autowrite.
+     * @default true
+     */
+    autoWrite?: boolean;
 
     /**
      * Database Driver.

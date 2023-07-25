@@ -11,8 +11,6 @@ import JSON5Driver from './drivers/JSON5.mjs';
 import CSVDriver from './drivers/CSV.mjs';
 import CSONDriver from './drivers/CSON.mjs';
 
-import pkg from '../../package.json' assert { type: 'json' };
-
 /**
  * Hyper Database.
  * @class Database
@@ -25,11 +23,13 @@ export default class Database {
    */
   constructor(options = {}) {
     options.size ??= 0;
-    options.spaces ??= 2;
-    options.overwrite ??= false;
+    options.spaces ??= 2
+    options.overWrite ??= false;
+    options.autoWrite ??= true;
 
     if (typeof options.size != 'number') throw new DatabaseError(`'${options.size}' is not number.`, { name: 'TypeError' });
-    if (typeof options.overwrite != 'boolean') throw new DatabaseError(`'${options.overwrite}' is not Boolean.`, { name: 'TypeError' });
+    if (typeof options.overWrite != 'boolean') throw new DatabaseError(`'${options.overWrite}' is not boolean.`, { name: 'TypeError' });
+    if (typeof options.autoWrite != 'boolean') throw new DatabaseError(`'${options.autoWrite}' is not boolean.`, { name: 'TypeError' });
     if (typeof options.spaces != 'number') throw new DatabaseError(`'${options.spaces}' is not number.`, { name: 'TypeError' });
 
     options.driver ??= new JSONDriver(options?.path, options?.name, options.spaces);
@@ -40,14 +40,14 @@ export default class Database {
      * @type typeof options
      * @private
      */
-    this.options = options;
+    Object.defineProperty(this, 'options', { value: options, writable: false, configurable: false });
 
     /**
      * Database driver.
-     * @type AnyDatabaseDriver
+     * @type Database.Drivers.Driver
      * @readonly
      */
-    this.driver = this.options.driver;
+    this.driver = options.driver;
 
     /**
      * Database size.
@@ -89,16 +89,19 @@ export default class Database {
    * @returns {string | unknown | { key: string, value: unknown }}
    * @example db.at(0, 1); db.at(null, 0); db.at(1, null);
    */
-  at(keyIndex = 0, valueIndex = 0) {
-    if (typeof keyIndex != 'undefined' && typeof keyIndex != 'number') throw new DatabaseError(`'${keyIndex}' is not Number or Undefined.`, { name: 'TypeError' });
-    if (typeof valueIndex != 'undefined' && typeof valueIndex != 'number') throw new DatabaseError(`'${valueIndex}' is not Number or Undefined.`, { name: 'TypeError' });
+  at(keyIndex, valueIndex) {
+    keyIndex ??= 0;
+    valueIndex ??= 0;
 
-    if (typeof keyIndex === 'number') return ((this.array({ type: 'keys' }))[keyIndex]);
-    else if (typeof valueIndex === 'number') return ((this.array({ type: 'values' }))[valueIndex]);
+    if (typeof keyIndex != 'number') throw new DatabaseError(`'${keyIndex}' is not Number or Undefined.`, { name: 'TypeError' });
+    if (typeof valueIndex != 'number') throw new DatabaseError(`'${valueIndex}' is not Number or Undefined.`, { name: 'TypeError' });
 
-    const { keys, values } = this.array();
+    const array = this.array();
 
-    return { key: keys[keyIndex], value: values[valueIndex] };
+    const key = array.keys[keyIndex];
+    const value = array.values[valueIndex];
+
+    return { key, value };
   };
 
   /**
@@ -192,7 +195,7 @@ export default class Database {
    * @example db.del('hypr');
    */
   del(key) {
-    const parsed = this.driver.unset(key);
+    const parsed = this.driver.unset(key, this.options.autoWrite);
     if (parsed) this.size--;
 
     return parsed;
@@ -338,7 +341,7 @@ export default class Database {
   set(key, value) {
     if (this.options.size != 0 && (this.size > this.options.size)) throw new DatabaseError('Database limit exceeded.', { name: 'RangeError' });
 
-    this.driver.set(key, value);
+    this.driver.set(key, value, this.options.autoWrite);
     this.size++;
 
     return value;
@@ -359,7 +362,7 @@ export default class Database {
   /**
    * Search in database.
    * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback 
-   * @returns {{ key: string, value: unknown }[]}
+   * @returns {Array<{ key: string, value: unknown }>}
    * @example db.search((value, key, index) => key === 'hypr');
    */
   search(callback = () => { }) {
@@ -367,7 +370,7 @@ export default class Database {
 
     const collected = [];
 
-    const data = this.driver.json();
+    const data = this.json();
 
     let index = 0;
     for (const key in data) {
@@ -488,7 +491,7 @@ export default class Database {
     if (!data) this.set(key, values);
 
     if (Array.isArray(data)) {
-      if (this.options.overwrite) this.update(key, values);
+      if (this.options.overWrite) this.update(key, values);
       else this.set(key, [...data, ...values]);
     } else this.set(key, values);
 
@@ -614,5 +617,5 @@ export default class Database {
    * @type string
    * @readonly
    */
-  static version = pkg.version;
+  static version = '5.0.1';
 };

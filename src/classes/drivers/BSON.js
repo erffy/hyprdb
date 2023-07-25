@@ -1,5 +1,11 @@
 const Driver = require('./BASE');
 
+let bson;
+try {
+  bson = require('bson');
+  if (!bson) bson = require('bson-ext');
+} catch (error) {};
+
 module.exports = class BSONDriver extends Driver {
   /**
    * Create new BSON-Based database.
@@ -9,11 +15,7 @@ module.exports = class BSONDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.bson');
 
-    /**
-     * BSON.
-     * @private
-     */
-    this.bson = require('bson-ext');
+    if (!bson) throw new Driver.Error(`Please install 'bson' or 'bson-ext' module to use this driver.`, { name: 'MissingModule' });
   };
 
   /**
@@ -22,7 +24,7 @@ module.exports = class BSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.bson.serialize(this.json()));
+    super.clone(path, bson.serialize(this.json()));
 
     return void 0;
   };
@@ -32,7 +34,7 @@ module.exports = class BSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.bson.serialize(this.json()), 'binary');
+    super.save(bson.serialize(this.json()), 'binary');
 
     return void 0;
   };
@@ -42,7 +44,7 @@ module.exports = class BSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.bson.deserialize);
+    super.read(bson.deserialize);
 
     return void 0;
   };

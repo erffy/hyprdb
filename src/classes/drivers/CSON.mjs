@@ -1,5 +1,7 @@
 import Driver from './BASE.mjs';
 
+const cson = await import('cson').then((module) => module.default).catch((error) => {});
+
 export default class CSONDriver extends Driver {
   /**
    * Create new CSON-Based database.
@@ -9,11 +11,7 @@ export default class CSONDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.cson');
 
-    /**
-     * CSON.
-     * @private
-     */
-    this.cson = Driver.require('cson');
+    if (!cson) throw new Driver.Error(`Please install 'cson' module to use this driver.`, { name: 'MissingModule' });
   };
 
   /**
@@ -22,7 +20,7 @@ export default class CSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.cson.stringify(this.json()));
+    super.clone(path, cson.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +30,7 @@ export default class CSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.cson.stringify(this.json()), 'utf8');
+    super.save(cson.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,7 +40,7 @@ export default class CSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.cson.parse, 'utf8');
+    super.read(cson.parse, 'utf8');
 
     return void 0;
   };

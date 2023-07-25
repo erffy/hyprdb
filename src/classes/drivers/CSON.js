@@ -1,5 +1,10 @@
 const Driver = require('./BASE');
 
+let cson;
+try {
+  cson = require('cson');
+} catch (error) {};
+
 module.exports = class CSONDriver extends Driver {
   /**
    * Create new CSON-Based database.
@@ -9,11 +14,7 @@ module.exports = class CSONDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.cson');
 
-    /**
-     * CSON.
-     * @private
-     */
-    this.cson = require('cson');
+    if (!cson) throw new Driver.Error(`Please install 'cson' module to use this driver.`, { name: 'MissingModule' });
   };
   
   /**
@@ -22,7 +23,7 @@ module.exports = class CSONDriver extends Driver {
    * @returns {void}
    */
   clone(path) {
-    super.clone(path, this.cson.stringify(this.json()));
+    super.clone(path, cson.stringify(this.json()));
 
     return void 0;
   };
@@ -32,7 +33,7 @@ module.exports = class CSONDriver extends Driver {
    * @returns {void}
    */
   save() {
-    super.save(this.cson.stringify(this.json()), 'utf8');
+    super.save(cson.stringify(this.json()), 'utf8');
 
     return void 0;
   };
@@ -42,7 +43,7 @@ module.exports = class CSONDriver extends Driver {
    * @returns {void}
    */
   read() {
-    super.read(this.cson.parse, 'utf8');
+    super.read(cson.parse, 'utf8');
 
     return void 0;
   };
