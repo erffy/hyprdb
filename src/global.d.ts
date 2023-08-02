@@ -1,4 +1,8 @@
+/**
+ * Hyper Database Module.
+ */
 declare module 'hypr.db' {
+  // @ts-ignore
   export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
     /**
      * Create new Database.
@@ -7,12 +11,10 @@ declare module 'hypr.db' {
      */
     public constructor(options?: DatabaseOptions);
 
-    private options: DatabaseOptions;
-
     /**
-     * Database driver.
+     * Database options.
      */
-    public readonly driver: AnyDatabaseDriver;
+    private options: DatabaseOptions;
 
     /**
      * Database size.
@@ -58,24 +60,24 @@ declare module 'hypr.db' {
      * Clone database. (like Backup)
      * @param path Clone path.
      */
-    public clone<K extends keyof V>(path?: K): void;
+    public clone<K extends keyof V>(path?: K): Promise<void>;
 
     /**
      * Copy database.
      */
-    public copy(): Database<V>;
+    public copy(): Promise<Database<V>>;
 
     /**
      * Concat databases.
      * @param databases Hypr databases to concat.
      */
-    public concat(...databases: Array<Database<V>>): Database<V>;
+    public concat(...databases: Array<Database<V>>): Promise<Database<V>>;
 
     /**
      * Delete data from database.
      * @param key Key
      */
-    public del<K extends keyof V>(key: K): boolean;
+    public del<K extends keyof V>(key: K): Promise<boolean>;
 
     /**
      * Determines whether all the members of an array satisfy the specified test.
@@ -131,7 +133,7 @@ declare module 'hypr.db' {
      * @param key Key
      * @param value Value
      */
-    public set<K extends keyof V>(key: K, value?: V[K]): V[K];
+    public set<K extends keyof V>(key: K, value?: V[K]): Promise<V[K]>;
 
     /**
      * Subtraction in database over key.
@@ -171,7 +173,7 @@ declare module 'hypr.db' {
      * @param count Count.
      * @param negative Set it to be negative.
      */
-    public math<K extends keyof V>(key: K, operator: MathOperations, count: number, negative?: boolean): number;
+    public math<K extends keyof V>(key: K, operator: MathOperations, count: number, negative?: boolean): Promise<number>;
 
     /**
      * A function that accepts up to four arguments. The map method calls the callbackfn function one time for each element in the array.
@@ -179,34 +181,34 @@ declare module 'hypr.db' {
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      * @param callback Condition
      */
-    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => unknown): void;
+    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => unknown): Promise<void>;
     
     /**
      * Push values to array.
      * @param key Key
      * @param values Values to push.
      */
-    public push<K extends keyof V>(key: K, ...values: V[K]): void;
+    public push<K extends keyof V>(key: K, ...values: V[K]): Promise<void>;
 
     /**
      * Pulls data from array.
      * @param key Key
      * @param callback
      */
-    public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, Database: this) => boolean): Array<V[K]>;
+    public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, Database: this) => boolean): Promise<Array<V[K]>>;
 
     /**
      * Database partitioning.
      * @param callback 
      */
-    public partition<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Array<Database<V>>;
+    public partition<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Promise<Array<Database<V>>>;
     
     /**
      * Update entry from database. If key is not exists, creates new key.
      * @param key Key
      * @param value New Value
      */
-    public update<K extends keyof V>(key: K, value?: V[K]): V[K];
+    public update<K extends keyof V>(key: K, value?: V[K]): Promise<V[K]>;
 
     /**
      * Drivers.
@@ -270,6 +272,8 @@ declare module 'hypr.db' {
    */
   // @ts-ignore
   export const Drivers = Database.Drivers;
+  // @ts-ignore
+  export const Database = Database;
 
   export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI | CSON | CSV;
   export type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
