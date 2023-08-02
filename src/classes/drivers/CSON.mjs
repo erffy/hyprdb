@@ -12,36 +12,32 @@ export default class CSONDriver extends Driver {
     super(path, name, '.cson');
 
     if (!cson) throw new Driver.Error(`Please install 'cson' module to use this driver.`, { name: 'MissingModule' });
+
+    this.read();
   };
 
   /**
    * Clone database.
    * @param {string} path 
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    super.clone(path, cson.stringify(this.json()));
-
-    return void 0;
+  async clone(path) {
+    return (await super.clone(path, cson.stringify(this.json())));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  save() {
-    super.save(cson.stringify(this.json()), 'utf8');
-
-    return void 0;
+  async save() {
+    return (await super.save(cson.stringify(this.json()), 'utf8'));
   };
 
   /**
    * Read database file and save to cache.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read() {
-    super.read(cson.parse, 'utf8');
-
-    return void 0;
+  async read() {
+    return (await super.read(cson.parse, 'utf8'));
   };
 };

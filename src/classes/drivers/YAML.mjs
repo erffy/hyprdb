@@ -14,36 +14,32 @@ export default class YAMLDriver extends Driver {
     super(path, name, '.yaml');
 
     if (!yaml) throw new Driver.Error(`Please install 'yaml' or 'js-yaml' module to use this driver.`, { name: 'MissingModule' });
+
+    this.read();
   };
   
   /**
    * Clone database.
    * @param {string} path 
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    super.clone(path, yaml.load(this.json()));
-
-    return void 0;
+  async clone(path) {
+    return (await super.clone(path, yaml.load(this.json())));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  save() {
-    super.save(yaml.dump(this.json()), 'utf8');
-
-    return void 0;
+  async save() {
+    return (await super.save(yaml.dump(this.json()), 'utf8'));
   };
 
   /**
    * Read database file and save to cache.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read() {
-    super.read(yaml.load, 'utf8');
-
-    return void 0;
+  async read() {
+    return (await super.read(yaml.load, 'utf8'));
   };
 };

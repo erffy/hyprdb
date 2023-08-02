@@ -1,4 +1,5 @@
-const { writeFileSync, mkdirSync, existsSync } = require('node:fs');
+const { mkdirSync, existsSync } = require('node:fs');
+const { readFile, writeFile } = require('node:fs/promises');
 
 const DatabaseError = require('../DatabaseError');
 
@@ -19,9 +20,9 @@ module.exports = class BaseDriver extends Map {
 
     path ??= process.cwd();
 
-    if (typeof path !== 'string') throw new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' });
-    if (name && typeof name !== 'string') throw new DatabaseError(`'${name}' is not String.`, { name: 'TypeError' });
-    if (typeof extension !== 'string') throw new DatabaseError(`'${extension}' is not String.`, { name: 'TypeError' });
+    if (typeof path != 'string') throw new DatabaseError(`'${path}' is not string.`, { name: 'TypeError' });
+    if (name && typeof name != 'string') throw new DatabaseError(`'${name}' is not string.`, { name: 'TypeError' });
+    if (typeof extension != 'string') throw new DatabaseError(`'${extension}' is not string.`, { name: 'TypeError' });
 
     const __path = path.substring(0, path.lastIndexOf(platform != 'win32' ? '/' : '\\'));
     if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
@@ -58,13 +59,14 @@ module.exports = class BaseDriver extends Map {
    * Set.
    * @param {string} key 
    * @param {unknown} value
-   * @returns {unknown}
+   * @returns {Promise<unknown>}
    */
-  set(key, value) {
-    if (typeof key !== 'string') throw new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' });
+  async set(key, value, autoWrite = true) {
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof autoWrite != 'boolean') throw new DatabaseError(`'${autoWrite}' is not boolean.`, { name: 'TypeError' });
 
     super.set(key, value);
-    this.save();
+    if (autoWrite) await this.save();
 
     return value;
   };
@@ -73,17 +75,16 @@ module.exports = class BaseDriver extends Map {
    * Edit.
    * @param {string} key 
    * @param {unknown} value 
-   * @returns {unknown}
+   * @returns {Promise<unknown>}
    */
-  edit(key, value) {
-    if (typeof key !== 'string') throw new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' });
+  async edit(key, value) {
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
-    if (!this.has(key)) return this.set(key, value);
+    if (!this.has(key)) return (await this.set(key, value));
 
-    this.unset(key);
-    this.set(key, value);
+    this.delete(key);
 
-    return value;
+    return (await this.set(key, value));
   };
 
   /**
@@ -92,7 +93,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {unknown}
    */
   get(key) {
-    if (typeof key !== 'string') throw new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' });
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
     return super.get(key);
   };
@@ -103,7 +104,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {boolean}
    */
   has(key) {
-    if (typeof key !== 'string') throw new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' });
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
     return super.has(key);
   };
@@ -113,11 +114,11 @@ module.exports = class BaseDriver extends Map {
    * @param {string} key 
    * @returns {boolean}
    */
-  unset(key) {
-    if (typeof key !== 'string') throw new DatabaseError(`'${key}' is not String.`, { name: 'TypeError' });
+  async unset(key, autoWrite = true) {
+    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
     const state = this.delete(key);
-    this.save();
+    if (autoWrite) await this.save();
 
     return state;
   };
@@ -125,41 +126,45 @@ module.exports = class BaseDriver extends Map {
   /**
    * Clone.
    * @param {string} path 
-   * @param {unknown} bind 
-   * @returns {void}
+   * @param {unknown} bind
+   * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
+   * @returns {Promise<void>}
    */
-  clone(path, bind) {
+  async clone(path, bind, encoding) {
     path ??= `${this.path}-clone${this.extension}`;
 
-    if (typeof path !== 'string') throw new DatabaseError(`'${path}' is not String.`, { name: 'TypeError' });
+    if (typeof path != 'string') throw new DatabaseError(`'${path}' is not string.`, { name: 'TypeError' });
     if (path.length < 1) throw new DatabaseError(`'${path}' is not valid path.`, { name: 'RangeError' });
 
     const __path = path.substring(0, path.lastIndexOf('/'));
     if (__path.length > 0 && !existsSync(__path)) mkdirSync(__path, { recursive: true });
 
-    writeFileSync(path, bind);
-
-    return void 0;
+    return (await writeFile(path, bind, { encoding }));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
+   * @returns {Promise<void>}
    */
-  save(data) {
-    return writeFileSync(this.path, Buffer.from(data));
+  async save(data, encoding) {
+    return (await writeFile(this.path, Buffer.from(data), { encoding }));
   };
 
   /**
    * Read database file and save to cache.
    * @param {(data: unknown) => unknown} handler 
    * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read(handler, encoding) {
-    const data = readFileSync(this.path, { encoding });
+  async read(handler, encoding) {
+    const data = await readFile(this.path, { encoding });
 
-    const handled = handler(data);
+    let handled = handler(data);
+    if (typeof handled?.then === 'function') handled = await handled.then((value) => value);
+
+    if (typeof handled != 'object') throw new DatabaseError(`'${handled}' is not object.`, { name: 'TypeError' });
+
     for (const key in handled) super.set(key, handled[key]);
 
     return void 0;
@@ -172,8 +177,7 @@ module.exports = class BaseDriver extends Map {
   json() {
     const obj = {};
 
-    const entries = this.entries();
-    for (const [key, value] of entries) BaseDriver.set(obj, key, value);
+    for (const [key, value] of this) obj[key] = value;
 
     return obj;
   };
@@ -184,7 +188,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {Array<string> | Array<unknown> | { keys: Array<string>, values: Array<unknown> } | void}
    */
   array(options = {}) {
-    if (typeof options !== 'object') throw new DatabaseError(`'${options}' is not Object.`, { name: 'TypeError' });
+    if (typeof options != 'object') throw new DatabaseError(`'${options}' is not Object.`, { name: 'TypeError' });
 
     options.type ??= 'all';
 
@@ -220,8 +224,8 @@ module.exports = class BaseDriver extends Map {
    * @returns {object}
    */
   static set(obj, path, value) {
-    if (typeof obj !== 'object') throw new TypeError(`'${obj}' is not Object.`);
-    if (typeof path !== 'string') throw new TypeError(`'${path}' is not String.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
 
@@ -245,8 +249,8 @@ module.exports = class BaseDriver extends Map {
    * @returns {object}
    */
   static get(obj, path) {
-    if (typeof obj !== 'object') throw new TypeError(`'${obj}' is not Object.`);
-    if (typeof path !== 'string') throw new TypeError(`'${path}' is not String.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
 
@@ -267,8 +271,8 @@ module.exports = class BaseDriver extends Map {
    * @returns {boolean}
    */
   static has(obj, path) {
-    if (typeof obj !== 'object') throw new TypeError(`'${obj}' is not Object.`);
-    if (typeof path !== 'string') throw new TypeError(`'${path}' is not String.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
 
@@ -289,8 +293,8 @@ module.exports = class BaseDriver extends Map {
    * @returns {object}
    */
   static merge(obj, source) {
-    if (typeof obj !== 'object') throw new TypeError(`'${obj}' is not Object.`);
-    if (typeof source !== 'object') throw new TypeError(`'${source}' is not Object.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof source != 'object') throw new TypeError(`'${source}' is not Object.`);
 
     for (const key in source) {
       if (typeof source[key] === 'object' && typeof obj[key] === 'object') BaseDriver.merge(obj[key], source[key]);
@@ -307,8 +311,8 @@ module.exports = class BaseDriver extends Map {
    * @returns {boolean}
    */
   static unset(obj, path) {
-    if (typeof obj !== 'object') throw new TypeError(`'${obj}' is not Object.`);
-    if (typeof path !== 'string') throw new TypeError(`'${path}' is not String.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
 
@@ -320,8 +324,7 @@ module.exports = class BaseDriver extends Map {
       obj = obj[key];
     };
 
-    const lastKey = keys[keys.length - 1];
-    delete obj[lastKey];
+    delete obj[keys[keys.length - 1]];
 
     return true;
   };

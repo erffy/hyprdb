@@ -1,15 +1,6 @@
 const DatabaseError = require('../classes/DatabaseError');
 
-const BaseDriver = require('./drivers/BASE');
-const JSONDriver = require('./drivers/JSON');
-const HJSONDriver = require('./drivers/HJSON');
-const YAMLDriver = require('./drivers/YAML');
-const BSONDriver = require('./drivers/BSON');
-const TOMLDriver = require('./drivers/TOML');
-const JSON5Driver = require('./drivers/JSON5');
-const INIDriver = require('./drivers/INI');
-const CSVDriver = require('./drivers/CSV');
-const CSONDriver = require('./drivers/CSON');
+const Drivers = require('./drivers/index');
 
 /**
  * Hyper Database.
@@ -32,8 +23,8 @@ module.exports = class Database {
     if (typeof options.autoWrite != 'boolean') throw new DatabaseError(`'${options.autoWrite}' is not boolean.`, { name: 'TypeError' });
     if (typeof options.spaces != 'number') throw new DatabaseError(`'${options.spaces}' is not number.`, { name: 'TypeError' });
 
-    options.driver ??= new JSONDriver(options?.path, options?.name, options.spaces);
-    if (!(options.driver instanceof BaseDriver)) throw new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' });
+    options.driver ??= new Drivers.JSONDriver(options?.path, options?.name, options.spaces);
+    if (!(options.driver instanceof Drivers.BaseDriver)) throw new DatabaseError(`'${options.driver}' is not valid Driver Instance.`, { name: 'DriverError' });
 
     /**
      * Database Options.
@@ -41,13 +32,6 @@ module.exports = class Database {
      * @private
      */
     Object.defineProperty(this, 'options', { value: options, writable: false, configurable: false });
-
-    /**
-     * Database driver.
-     * @type Database.Drivers.Driver
-     * @readonly
-     */
-    this.driver = options.driver;
 
     /**
      * Database size.
@@ -61,7 +45,7 @@ module.exports = class Database {
    * Assign this database to other database.
    * @param {class} other 
    * @param {{ callbackName?: string }} options
-   * @returns {object}
+   * @returns {Record<string, boolean>}
    */
   assign(other, options = {}) {
     if (typeof options != 'object') throw new DatabaseError(`'${options}' is not object.`, { name: 'TypeError' });
@@ -130,7 +114,7 @@ module.exports = class Database {
    * @example db.array(); db.array({ type: 'keys' }); db.array({ type: 'values' });
    */
   array(options) {
-    return this.driver.array(options);
+    return this.options.driver.array(options);
   };
 
   /**
@@ -148,24 +132,24 @@ module.exports = class Database {
   /**
    * Clone database. (like Backup.)
    * @param {string} path
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    return this.driver.clone(path);
+  async clone(path) {
+    return (await this.options.driver.clone(path));
   };
 
   /**
    * Copy database.
-   * @returns {Database}
+   * @returns {Promise<Database>}
    */
-  copy() {
+  async copy() {
     const data = this.all();
 
     const options = { ...this.options };
     options.path = `${this.options.path}/${this.options.name}-copy.${this.options.driver.extension}`;
 
     const db = new this.constructor(options);
-    for (const { key, value } of data) db.set(key, value);
+    for (const { key, value } of data) await db.set(key, value);
 
     return db;
   };
@@ -173,16 +157,16 @@ module.exports = class Database {
   /**
    * Concat databases.
    * @param {...Database} databases
-   * @returns {Database} New Concatted database.
+   * @returns {Promise<Database>} New Concatted database.
    */
-  concat(...databases) {
+  async concat(...databases) {
     const db = this.copy();
 
     for (const database of databases) {
       if (!(database instanceof Database)) throw new DatabaseError(`'${database}' is not valid database.`, { name: 'UnknownInstance' });
 
       const data = database.all();
-      for (const { key, value } of data) db.set(key, value);
+      for (const { key, value } of data) await db.set(key, value);
     };
 
     return db;
@@ -191,11 +175,11 @@ module.exports = class Database {
   /**
    * Delete data from database.
    * @param {string} key 
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    * @example db.del('hypr');
    */
-  del(key) {
-    const parsed = this.driver.unset(key, this.options.autoWrite);
+  async del(key) {
+    const parsed = await this.options.driver.unset(key, this.options.autoWrite);
     if (parsed) this.size--;
 
     return parsed;
@@ -226,7 +210,7 @@ module.exports = class Database {
    * @example db.exists('hypr');
    */
   exists(key) {
-    return this.driver.has(key);
+    return this.options.driver.has(key);
   };
 
   /**
@@ -318,7 +302,7 @@ module.exports = class Database {
    * @example db.get('hypr.version');
    */
   get(key) {
-    return this.driver.get(key);
+    return this.options.driver.get(key);
   };
 
   /**
@@ -335,13 +319,13 @@ module.exports = class Database {
    * Set data to database.
    * @param {string} key 
    * @param {unknown} value 
-   * @returns {unknown}
+   * @returns {Promise<unknown>}
    * @example db.set('hypr.version', '1.0.0');
    */
-  set(key, value) {
+  async set(key, value) {
     if (this.options.size != 0 && (this.size > this.options.size)) throw new DatabaseError('Database limit exceeded.', { name: 'RangeError' });
 
-    this.driver.set(key, value, this.options.autoWrite);
+    await this.options.driver.set(key, value, this.options.autoWrite);
     this.size++;
 
     return value;
@@ -405,7 +389,7 @@ module.exports = class Database {
    * @returns {object}
    */
   json() {
-    return this.driver.json();
+    return this.options.driver.json();
   };
 
   /**
@@ -433,12 +417,12 @@ module.exports = class Database {
    * @returns {number}
    * @example db.math('result', '/', 2);
    */
-  math(key, operator, count, negative = false) {
+  async math(key, operator, count, negative = false) {
     if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
     if (typeof operator != 'string') throw new DatabaseError(`'${operator}' is not string.`, { name: 'TypeError' });
     if (typeof count != 'number') throw new DatabaseError(`'${count}' is not number.`, { name: 'TypeError' });
 
-    if (!this.exists(key)) this.set(key, 0);
+    if (!this.exists(key)) await this.set(key, 0);
 
     const data = this.get(key);
     if (typeof data != 'number') throw new DatabaseError(`'${data}' is not number.`, { name: 'TypeError' });
@@ -453,16 +437,16 @@ module.exports = class Database {
 
     if (!negative && result < 0) result = 0;
 
-    return this.update(key, result);
+    return (await this.update(key, result));
   };
 
   /**
    * A function that accepts up to four arguments. The map method calls the callbackfn function one time for each element in the array.
    * Calls a defined callback function on each element of an array, and returns an array that contains the results.
-   * @param {(value: unknown, key: string, index: number, Database: this) => unknown} callback 
-   * @returns {Database}
+   * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback 
+   * @returns {Promise<Database>}
    */
-  map(callback = () => { }) {
+  async map(callback = () => { }) {
     if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
 
     const db = new this.constructor(this.options);
@@ -471,7 +455,7 @@ module.exports = class Database {
     for (let index = 0; index < data.length; index++) {
       const { key, value } = data[index];
 
-      if (callback(value, key, index, this)) db.set(key, value);
+      if (callback(value, key, index, this)) await db.set(key, value);
     };
 
     return db;
@@ -481,19 +465,19 @@ module.exports = class Database {
    * Push data to array.
    * @param {string} key 
    * @param  {...unknown} values 
-   * @returns {void}
+   * @returns {Promise<void>}
    * @example db.push('versions', '1.0', '1.1');
    */
-  push(key, ...values) {
+  async push(key, ...values) {
     if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
     const data = this.get(key);
-    if (!data) this.set(key, values);
+    if (!data) await this.set(key, values);
 
     if (Array.isArray(data)) {
-      if (this.options.overWrite) this.update(key, values);
-      else this.set(key, [...data, ...values]);
-    } else this.set(key, values);
+      if (this.options.overWrite) await this.update(key, values);
+      else await this.set(key, [...data, ...values]);
+    } else await this.set(key, values);
 
     return void 0;
   };
@@ -502,10 +486,10 @@ module.exports = class Database {
    * Pulls data from array.
    * @param {string} key 
    * @param {(value: unknown, index: number, Database: this) => boolean} callback
-   * @returns {Array<unknown>}
+   * @returns {Promise<Array<unknown>>}
    * @example db.pull('versions', (prop) => prop === '1.0'));
    */
-  pull(key, callback = () => { }) {
+  async pull(key, callback = () => { }) {
     if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
     if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
 
@@ -522,15 +506,15 @@ module.exports = class Database {
       if (!callback(value, index, this)) result.push(value);
     };
 
-    return this.update(key, result);
+    return (await this.update(key, result));
   };
 
   /**
    * Database partitioning.
    * @param {(value: unknown, key: string, index: number, Database: this) => boolean} callback
-   * @returns {Array<Database>}
+   * @returns {Promise<Array<Database>>}
    */
-  partition(callback = () => { }) {
+  async partition(callback = () => { }) {
     if (typeof callback != 'function') throw new DatabaseError(`'${callback}' is not function.`, { name: 'TypeError' });
 
     const tables = [new this.constructor(this.options), new this.constructor(this.options)];
@@ -539,8 +523,8 @@ module.exports = class Database {
     for (let index = 0; index < data.length; index++) {
       const { key, value } = data[index];
 
-      if (callback(value, key, index, this)) tables[0].set(key, value);
-      else tables[1].set(key, value);
+      if (callback(value, key, index, this)) await tables[0].set(key, value);
+      else await tables[1].set(key, value);
     };
 
     return tables;
@@ -550,11 +534,11 @@ module.exports = class Database {
    * Update data from database.
    * @param {string} key 
    * @param {unknown} value 
-   * @returns {unknown}
+   * @returns {Promise<unknown>}
    * @example db.update('key', 'newValue');
    */
-  update(key, value) {
-    return this.driver.update(key, value);
+  async update(key, value) {
+    return (await this.options.driver.update(key, value));
   };
 
   /**
@@ -564,52 +548,47 @@ module.exports = class Database {
     /**
      * Driver.
      */
-    Driver: BaseDriver,
+    Driver: Drivers.BaseDriver,
 
     /**
      * BSON Driver.
      */
-    BSON: BSONDriver,
+    BSON: Drivers.BSONDriver,
 
     /**
      * YAML Driver.
      */
-    YAML: YAMLDriver,
+    YAML: Drivers.YAMLDriver,
 
     /**
      * JSON Driver.
      */
-    JSON: JSONDriver,
+    JSON: Drivers.JSONDriver,
 
     /**
      * TOML Driver.
      */
-    TOML: TOMLDriver,
+    TOML: Drivers.TOMLDriver,
 
     /**
      * HJSON Driver.
      */
-    HJSON: HJSONDriver,
+    HJSON: Drivers.HJSONDriver,
 
     /**
      * JSON5 Driver.
      */
-    JSON5: JSON5Driver,
+    JSON5: Drivers.JSON5Driver,
 
     /**
      * INI Driver.
      */
-    INI: INIDriver,
-
-    /**
-     * CSV Driver.
-     */
-    CSV: CSVDriver,
+    INI: Drivers.INIDriver,
 
     /**
      * CSON Driver.
      */
-    CSON: CSONDriver
+    CSON: Drivers.CSONDriver
   };
 
   /**
@@ -617,5 +596,5 @@ module.exports = class Database {
    * @type string
    * @readonly
    */
-  static version = '5.0.1';
+  static version = '5.0.2';
 };

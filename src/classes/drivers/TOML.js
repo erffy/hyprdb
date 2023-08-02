@@ -15,36 +15,32 @@ module.exports = class TOMLDriver extends Driver {
     super(path, name, '.toml');
 
     if (!toml) throw new Driver.Error(`Please install '@iarna/toml' module to use this driver.`, { name: 'MissingModule' });
+
+    this.read();
   };
   
   /**
    * Clone database.
    * @param {string} path 
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    super.clone(path, toml.stringify(this.json()));
-
-    return void 0;
+  async clone(path) {
+    return (await super.clone(path, toml.stringify(this.json())));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  save() {
-    super.save(toml.stringify(this.json()), 'utf8');
-
-    return void 0;
+  async save() {
+    return (await super.save(toml.stringify(this.json()), 'utf8'));
   };
 
   /**
    * Read database file and save to cache.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read() {
-    super.read(toml.parse, 'utf8');
-
-    return void 0;
+  async read() {
+    return (await super.read(toml.parse, 'utf8'));
   };
 };

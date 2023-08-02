@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
+import { writeFile, readFile } from 'node:fs/promises';
 import { platform as _platform } from 'node:os';
 
 import DatabaseError from '../DatabaseError.mjs';
@@ -59,14 +60,14 @@ export default class BaseDriver extends Map {
    * Set.
    * @param {string} key 
    * @param {unknown} value
-   * @returns {unknown}
+   * @returns {Promise<unknown>}
    */
-  set(key, value, autoWrite = true) {
+  async set(key, value, autoWrite = true) {
     if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
     if (typeof autoWrite != 'boolean') throw new DatabaseError(`'${autoWrite}' is not boolean.`, { name: 'TypeError' });
 
     super.set(key, value);
-    if (autoWrite) this.save();
+    if (autoWrite) await this.save();
 
     return value;
   };
@@ -75,17 +76,16 @@ export default class BaseDriver extends Map {
    * Edit.
    * @param {string} key 
    * @param {unknown} value 
-   * @returns {unknown}
+   * @returns {Promise<unknown>}
    */
-  edit(key, value) {
+  async edit(key, value) {
     if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
-    if (!this.has(key)) return this.set(key, value);
+    if (!this.has(key)) return (await this.set(key, value));
 
-    this.unset(key);
-    this.set(key, value);
+    this.delete(key);
 
-    return value;
+    return (await this.set(key, value));
   };
 
   /**
@@ -115,11 +115,11 @@ export default class BaseDriver extends Map {
    * @param {string} key 
    * @returns {boolean}
    */
-  unset(key, autoWrite = true) {
+  async unset(key, autoWrite = true) {
     if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
 
     const state = this.delete(key);
-    if (autoWrite) this.save();
+    if (autoWrite) await this.save();
 
     return state;
   };
@@ -127,10 +127,11 @@ export default class BaseDriver extends Map {
   /**
    * Clone.
    * @param {string} path 
-   * @param {unknown} bind 
-   * @returns {void}
+   * @param {unknown} bind
+   * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
+   * @returns {Promise<void>}
    */
-  clone(path, bind) {
+  async clone(path, bind, encoding) {
     path ??= `${this.path}-clone${this.extension}`;
 
     if (typeof path != 'string') throw new DatabaseError(`'${path}' is not string.`, { name: 'TypeError' });
@@ -139,29 +140,32 @@ export default class BaseDriver extends Map {
     const __path = path.substring(0, path.lastIndexOf('/'));
     if (__path.length > 0 && !existsSync(__path)) mkdirSync(__path, { recursive: true });
 
-    writeFileSync(path, bind);
-
-    return void 0;
+    return (await writeFile(path, bind, { encoding }));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
+   * @returns {Promise<void>}
    */
-  save(data) {
-    return writeFileSync(this.path, Buffer.from(data));
+  async save(data, encoding) {
+    return (await writeFile(this.path, Buffer.from(data), { encoding }));
   };
 
   /**
    * Read database file and save to cache.
    * @param {(data: unknown) => unknown} handler 
    * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read(handler, encoding) {
-    const data = readFileSync(this.path, { encoding });
+  async read(handler, encoding) {
+    const data = await readFile(this.path, { encoding });
 
-    const handled = handler(data);
+    let handled = handler(data);
+    if (typeof handled?.then === 'function') handled = await handled.then((value) => value);
+
+    if (typeof handled != 'object') throw new DatabaseError(`'${handled}' is not object.`, { name: 'TypeError' });
+
     for (const key in handled) super.set(key, handled[key]);
 
     return void 0;

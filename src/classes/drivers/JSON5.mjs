@@ -18,36 +18,32 @@ export default class JSON5Driver extends Driver {
      * @private
      */
     this.spaces = spaces;
+
+    this.read();
   };
   
   /**
    * Clone database.
    * @param {string} path 
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    super.clone(path, json5.stringify(this.json(), null, this.spaces));
-
-    return void 0;
+  async clone(path) {
+    return (await super.clone(path, json5.stringify(this.json(), null, this.spaces)));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  save() {
-    super.save(json5.stringify(this.json(), null, this.spaces), 'utf8');
-
-    return void 0;
+  async save() {
+    return (await super.save(json5.stringify(this.json(), null, this.spaces), 'utf8'));
   };
 
   /**
    * Read database file and save to cache.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read() {
-    super.read(json5.parse, 'utf8');
-
-    return void 0;
+  async read() {
+    return (await super.read(json5.parse, 'utf8'));
   };
 };

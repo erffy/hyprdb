@@ -1,6 +1,6 @@
 {
   "name": "hypr.db",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.js",
@@ -37,12 +37,15 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/erqeweew/hyprdb.git"
+    "url": "git+https://github.com/erqeweew/hyprdb.git"
   },
-  "homepage": "https://github.com/erqeweew/hyprdb",
+  "bugs": {
+    "url": "https://github.com/erqeweew/hyprdb/issues"
+  },
+  "homepage": "https://github.com/erqeweew/hyprdb/wiki",
   "author": "erqewee",
   "license": "MIT",
-  "optionalDependencies": {
+  "peerDependencies": {
     "@iarna/toml": "^2.2.5",
     "bson": "^5.4.0",
     "bson-ext": "^4.0.3",
@@ -54,10 +57,58 @@
     "json5": "^2.2.3",
     "yaml": "^2.3.1"
   },
+  "peerDependenciesMeta": {
+    "@iarna/toml": {
+      "optional": true
+    },
+    "bson": {
+      "optional": true
+    },
+    "bson-ext": {
+      "optional": true
+    },
+    "cson": {
+      "optional": true
+    },
+    "csv": {
+      "optional": true
+    },
+    "hjson": {
+      "optional": true
+    },
+    "ini": {
+      "optional": true
+    },
+    "js-yaml": {
+      "optional": true
+    },
+    "json5": {
+      "optional": true
+    },
+    "yaml": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "@types/node": "^20.4.4"
+    "@iarna/toml": "^2.2.5",
+    "@types/node": "^20.4.5",
+    "bson": "^5.4.0",
+    "bson-ext": "^4.0.3",
+    "cson": "^7.20.0",
+    "csv": "^6.3.1",
+    "hjson": "^3.2.2",
+    "ini": "^4.1.1",
+    "js-yaml": "^4.1.0",
+    "json5": "^2.2.3",
+    "yaml": "^2.3.1"
+  },
+  "engines": {
+    "node": ">=15.0.0"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "optionalDependencies": {
+    "hyprbench": "^1.0.2"
   }
 }

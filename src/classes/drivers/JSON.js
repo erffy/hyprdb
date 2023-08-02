@@ -14,36 +14,32 @@ module.exports = class JSONDriver extends Driver {
      * @private
      */
     this.spaces = spaces;
+
+    this.read();
   };
   
   /**
    * Clone database.
    * @param {string} path 
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    super.clone(path, JSON.stringify(this.json(), null, this.spaces));
-
-    return void 0;
+  async clone(path) {
+    return (await super.clone(path, JSON.stringify(this.json(), null, this.spaces)));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  save() {    
-    super.save(JSON.stringify(this.json(), null, this.spaces), 'utf8');
-
-    return void 0;
+  async save() {    
+    return (await super.save(JSON.stringify(this.json(), null, this.spaces)));
   };
 
   /**
    * Read database file and save to cache.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read() {
-    super.read(JSON.parse, 'utf8');
-
-    return void 0;
+  async read() {
+    return (await super.read(JSON.parse, 'utf8'));
   };
 };

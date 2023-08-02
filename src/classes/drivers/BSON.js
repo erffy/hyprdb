@@ -16,36 +16,32 @@ module.exports = class BSONDriver extends Driver {
     super(path, name, '.bson');
 
     if (!bson) throw new Driver.Error(`Please install 'bson' or 'bson-ext' module to use this driver.`, { name: 'MissingModule' });
+
+    this.read();
   };
 
   /**
    * Clone database.
    * @param {string} path 
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  clone(path) {
-    super.clone(path, bson.serialize(this.json()));
-
-    return void 0;
+  async clone(path) {
+    return (await super.clone(path, bson.serialize(this.json())));
   };
 
   /**
    * Save cache to database file.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  save() {
-    super.save(bson.serialize(this.json()), 'binary');
-
-    return void 0;
+  async save() {
+    return (await super.save(bson.serialize(this.json())));
   };
 
   /**
    * Read database file and save to cache.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  read() {
-    super.read(bson.deserialize);
-
-    return void 0;
+  async read() {
+    return (await super.read(bson.deserialize));
   };
 };
