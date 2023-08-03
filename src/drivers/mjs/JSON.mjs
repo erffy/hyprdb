@@ -1,6 +1,6 @@
-const Driver = require('./BASE');
+import Driver from "./BASE.mjs";
 
-module.exports = class JSONDriver extends Driver {
+export default class JSONDriver extends Driver {
   /**
    * Create new JSON-Based database.
    * @param {string} path 
@@ -15,6 +15,7 @@ module.exports = class JSONDriver extends Driver {
      */
     this.spaces = spaces;
 
+    Driver.write(this.path, JSON.stringify({}), 'utf8');
     this.read();
   };
   

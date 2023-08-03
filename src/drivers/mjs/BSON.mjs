@@ -1,8 +1,10 @@
 import Driver from './BASE.mjs';
 
 let bson;
-await import('bson').then((module) => bson = module.default).catch((error) => { });
-if (!bson) await import('bson-ext').then((module) => bson = module).catch((error) => { });
+try {
+  bson = (await import('bson')).default;
+  if (!bson) bson = (await import('bson-ext')).default;
+} catch (error) {};
 
 export default class BSONDriver extends Driver {
   /**
@@ -13,8 +15,9 @@ export default class BSONDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.bson');
 
-    if (!bson) throw new Driver.Error(`Please install 'bson' or 'bson-ext' module to use this driver.`, { name: 'MissingModule' });
+    if (!bson) new Driver.Error({ message: `Please install 'bson' or 'bson-ext' module to use this driver.` });
 
+    Driver.write(this.path, bson.serialize({}), 'binary');
     this.read();
   };
 

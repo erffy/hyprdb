@@ -1,4 +1,4 @@
-const Database = require('./classes/Database');
+const Database = require('./database/Database');
 
 module.exports = Database;
 module.exports.Database = Database;

@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { writeFile, readFile } from 'node:fs/promises';
 import { platform as _platform } from 'node:os';
 
-import DatabaseError from '../DatabaseError.mjs';
+import DatabaseError from '../../error/DatabaseError.mjs';
 
 /**
  * @abstract
@@ -21,9 +21,9 @@ export default class BaseDriver extends Map {
 
     path ??= process.cwd();
 
-    if (typeof path != 'string') throw new DatabaseError(`'${path}' is not string.`, { name: 'TypeError' });
-    if (name && typeof name != 'string') throw new DatabaseError(`'${name}' is not string.`, { name: 'TypeError' });
-    if (typeof extension != 'string') throw new DatabaseError(`'${extension}' is not string.`, { name: 'TypeError' });
+    if (typeof path != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof path });
+    if (name && typeof name != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof name });
+    if (typeof extension != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof extension });
 
     const __path = path.substring(0, path.lastIndexOf(platform != 'win32' ? '/' : '\\'));
     if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
@@ -63,8 +63,8 @@ export default class BaseDriver extends Map {
    * @returns {Promise<unknown>}
    */
   async set(key, value, autoWrite = true) {
-    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
-    if (typeof autoWrite != 'boolean') throw new DatabaseError(`'${autoWrite}' is not boolean.`, { name: 'TypeError' });
+    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
+    if (typeof autoWrite != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof autoWrite });
 
     super.set(key, value);
     if (autoWrite) await this.save();
@@ -79,7 +79,7 @@ export default class BaseDriver extends Map {
    * @returns {Promise<unknown>}
    */
   async edit(key, value) {
-    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
 
     if (!this.has(key)) return (await this.set(key, value));
 
@@ -94,7 +94,7 @@ export default class BaseDriver extends Map {
    * @returns {unknown}
    */
   get(key) {
-    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
 
     return super.get(key);
   };
@@ -105,7 +105,7 @@ export default class BaseDriver extends Map {
    * @returns {boolean}
    */
   has(key) {
-    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
 
     return super.has(key);
   };
@@ -116,7 +116,7 @@ export default class BaseDriver extends Map {
    * @returns {boolean}
    */
   async unset(key, autoWrite = true) {
-    if (typeof key != 'string') throw new DatabaseError(`'${key}' is not string.`, { name: 'TypeError' });
+    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
 
     const state = this.delete(key);
     if (autoWrite) await this.save();
@@ -134,8 +134,8 @@ export default class BaseDriver extends Map {
   async clone(path, bind, encoding) {
     path ??= `${this.path}-clone${this.extension}`;
 
-    if (typeof path != 'string') throw new DatabaseError(`'${path}' is not string.`, { name: 'TypeError' });
-    if (path.length < 1) throw new DatabaseError(`'${path}' is not valid path.`, { name: 'RangeError' });
+    if (typeof path != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof path });
+    if (path.length < 1) new DatabaseError({ message: 'Invalid path.' });
 
     const __path = path.substring(0, path.lastIndexOf('/'));
     if (__path.length > 0 && !existsSync(__path)) mkdirSync(__path, { recursive: true });
@@ -159,12 +159,14 @@ export default class BaseDriver extends Map {
    * @returns {Promise<void>}
    */
   async read(handler, encoding) {
+    if (typeof handler != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof handler });
+
     const data = await readFile(this.path, { encoding });
 
     let handled = handler(data);
     if (typeof handled?.then === 'function') handled = await handled.then((value) => value);
 
-    if (typeof handled != 'object') throw new DatabaseError(`'${handled}' is not object.`, { name: 'TypeError' });
+    if (typeof handled != 'object') new DatabaseError({ type: 'Validation', expected: 'object', received: typeof handled });
 
     for (const key in handled) super.set(key, handled[key]);
 
@@ -178,7 +180,7 @@ export default class BaseDriver extends Map {
   json() {
     const obj = {};
 
-    for (const [key, value] of this) obj[key] = value;
+    for (const [key, value] of this) BaseDriver.set(obj, key, value);
 
     return obj;
   };
@@ -189,7 +191,7 @@ export default class BaseDriver extends Map {
    * @returns {Array<string> | Array<unknown> | { keys: Array<string>, values: Array<unknown> } | void}
    */
   array(options = {}) {
-    if (typeof options != 'object') throw new DatabaseError(`'${options}' is not Object.`, { name: 'TypeError' });
+    if (typeof options != 'object') new DatabaseError({ type: 'Validation', expected: 'object', received: typeof options });
 
     options.type ??= 'all';
 
@@ -219,13 +221,13 @@ export default class BaseDriver extends Map {
 
   /**
    * Set.
-   * @param {object} obj
+   * @param {Record<string, any>} obj
    * @param {string} path
    * @param {unknown} value
    * @returns {object}
    */
   static set(obj, path, value) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -245,12 +247,12 @@ export default class BaseDriver extends Map {
 
   /**
    * Get.
-   * @param {object} obj
+   * @param {Record<string, any>} obj
    * @param {string} path
    * @returns {object}
    */
   static get(obj, path) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -267,12 +269,12 @@ export default class BaseDriver extends Map {
 
   /**
    * Has.
-   * @param {object} obj
+   * @param {Record<string, any>} obj
    * @param {string} path
    * @returns {boolean}
    */
   static has(obj, path) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -289,13 +291,13 @@ export default class BaseDriver extends Map {
 
   /**
    * Merge.
-   * @param {object} obj
+   * @param {Record<string, any>} obj
    * @param {object} source
    * @returns {object}
    */
   static merge(obj, source) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
-    if (typeof source != 'object') throw new TypeError(`'${source}' is not Object.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
+    if (typeof source != 'object') throw new TypeError(`'${source}' is not object.`);
 
     for (const key in source) {
       if (typeof source[key] === 'object' && typeof obj[key] === 'object') BaseDriver.merge(obj[key], source[key]);
@@ -307,12 +309,12 @@ export default class BaseDriver extends Map {
 
   /**
    * Unset.
-   * @param {object} obj
+   * @param {Record<string, any>} obj
    * @param {string} path
    * @returns {boolean}
    */
   static unset(obj, path) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not Object.`);
+    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -335,4 +337,12 @@ export default class BaseDriver extends Map {
    * @type typeof DatabaseError
    */
   static Error = DatabaseError;
+
+  /**
+   * Write.
+   */
+  static write(path, data, encoding) {
+    if (existsSync(path)) return void 0;
+    else return writeFileSync(path, data, { encoding });
+  };
 };

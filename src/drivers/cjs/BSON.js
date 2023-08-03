@@ -15,8 +15,9 @@ module.exports = class BSONDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.bson');
 
-    if (!bson) throw new Driver.Error(`Please install 'bson' or 'bson-ext' module to use this driver.`, { name: 'MissingModule' });
+    if (!bson) new Driver.Error({ message: `Please install 'bson' or 'bson-ext' module to use this driver.` });
 
+    Driver.write(this.path, bson.serialize({}), 'binary');
     this.read();
   };
 

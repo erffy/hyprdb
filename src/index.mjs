@@ -1,4 +1,4 @@
-import Database from './classes/Database.mjs';
+import Database from './database/Database.mjs';
 const Drivers = Database.Drivers;
 
 export { Database, Drivers };

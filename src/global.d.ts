@@ -27,14 +27,14 @@ declare module 'hypr.db' {
      * @param other Database class.
      * @param options Assign options.
      */
-    public assign(other: unknown, options?: { callbackName?: string }): object;
+    public assign(other: any, options?: { callbackName?: string }): Record<string, boolean>;
 
     /**
      * Get data with index.
      * @param keyIndex Key index.
      * @param valueIndex Value index.
      */
-    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): void | string | unknown | { key: string, value: unknown };
+    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): void | string | any | { key: string, value: any };
 
     /**
      * Get all data from database.
@@ -95,7 +95,7 @@ declare module 'hypr.db' {
      * A function that accepts up to four arguments. The filter method calls the predicate function one time for each element in the array.
      * @param callback
      */
-    public filter<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Array<V[K]>;
+    public filter<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Database<V>;
 
     /**
      * Find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
@@ -158,7 +158,7 @@ declare module 'hypr.db' {
     /**
      * Convert database to json.
      */
-    public json(): object;
+    public json(): Record<string, V>;
 
     /**
      * Get data type of stored value in key.
@@ -181,7 +181,7 @@ declare module 'hypr.db' {
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      * @param callback Condition
      */
-    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => unknown): Promise<void>;
+    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => any): Promise<void>;
     
     /**
      * Push values to array.
@@ -253,12 +253,7 @@ declare module 'hypr.db' {
       /**
        * INI Driver.
        */
-      INI,
-
-      /**
-       * CSV Driver.
-       */
-      CSV
+      INI
     }
 
     /**
@@ -275,13 +270,13 @@ declare module 'hypr.db' {
   // @ts-ignore
   export const Database = Database;
 
-  export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI | CSON | CSV;
+  export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI | CSON;
   export type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
-  export type DatabaseSignature<V> = { [key in keyof V]: unknown };
+  export type DatabaseSignature<V> = { [key in keyof V]: any };
   export type Encoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'ucs-2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex';
   export type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
 
-  abstract class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map<string, unknown> {
+  abstract class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map<string, V> {
     /**
      * Create new driver.
      * @param path Driver path.
@@ -305,27 +300,27 @@ declare module 'hypr.db' {
     protected readonly extension: string;
 
     // @ts-ignore
-    public set<K extends keyof V>(key: K, value?: V[K], autoWrite?: boolean): V[K];
+    public set<K extends keyof V>(key: K, value?: V[K], autoWrite?: boolean): Promise<V[K]>;
     // @ts-ignore
     public get<K extends keyof V>(key: K): V[K];
     // @ts-ignore
     public has<K extends keyof V>(key: K): boolean;
-    public edit<K extends keyof V>(key: K, value?: V[K]): V[K];
-    public unset<K extends keyof V>(key: K, autoWrite?: boolean): boolean;
-    public clone<K extends keyof V>(path: K): void;
+    public edit<K extends keyof V>(key: K, value?: V[K]): Promise<V[K]>;
+    public unset<K extends keyof V>(key: K, autoWrite?: boolean): Promise<boolean>;
+    public clone<K extends keyof V>(path: K): Promise<void>;
 
     /**
      * Save database.
      * @param data Data to save database file.
      * @param encoding Encoding
      */
-    public save(data: unknown, encoding?: Encoding): void;
+    public save(data: any, encoding?: Encoding): Promise<void>;
     /**
      * Read database and save to cache.
      * @param handler Data handler.
      * @param encoding Encoding.
      */
-    public read(handler: (data: unknown) => unknown, encoding?: Encoding): void;
+    public read(handler: (data: any) => any, encoding?: Encoding): Promise<void>;
   }
 
   class JSON extends Driver {
@@ -357,10 +352,6 @@ declare module 'hypr.db' {
   }
 
   class CSON extends BSON {
-
-  }
-
-  class CSV extends BSON {
 
   }
 
@@ -407,6 +398,6 @@ declare module 'hypr.db' {
   }
 
   export interface DatabaseMap {
-    [key: string]: unknown;
+    [key: string]: any;
   }
 }

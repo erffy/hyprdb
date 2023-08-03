@@ -2,8 +2,7 @@ const Driver = require('./BASE');
 
 let yaml;
 try {
-  const _yaml = require('yaml');
-  yaml = { load: _yaml.parse, dump: _yaml.stringify };
+  yaml = require('yaml');
   if (!yaml) yaml = require('js-yaml');
 } catch (error) {};
 
@@ -16,8 +15,9 @@ module.exports = class YAMLDriver extends Driver {
   constructor(path, name) {
     super(path, name, '.yaml');
 
-    if (!yaml) throw new Driver.Error(`Please install 'yaml' or 'js-yaml' module to use this driver.`, { name: 'MissingModule' });
+    if (!yaml) new Driver.Error({ message: `Please install 'yaml' or 'js-yaml' module to use this driver.` });
 
+    Driver.write(this.path, yaml?.dump ? yaml.dump({}) : yaml.stringify({}), 'utf8');
     this.read();
   };
   
@@ -27,7 +27,9 @@ module.exports = class YAMLDriver extends Driver {
    * @returns {Promise<void>}
    */
   async clone(path) {
-    return (await super.clone(path, yaml.load(this.json())));
+    const json = this.json();
+
+    return (await super.clone(path, yaml.load ? yaml.load(json) : yaml.parse(json)));
   };
 
   /**
@@ -35,7 +37,9 @@ module.exports = class YAMLDriver extends Driver {
    * @returns {Promise<void>}
    */
   async save() {
-    return (await super.save(yaml.dump(this.json()), 'utf8'));
+    const json = this.json();
+
+    return (await super.save(yaml.dump ? yaml.dump(json) : yaml.stringify(json), 'utf8'));
   };
 
   /**
@@ -43,6 +47,6 @@ module.exports = class YAMLDriver extends Driver {
    * @returns {Promise<void>}
    */
   async read() {
-    return (await super.read(yaml.load, 'utf8'));
+    return (await super.read(yaml?.load ?? yaml?.parse, 'utf8'));
   };
 };
