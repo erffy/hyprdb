@@ -2,7 +2,7 @@ const { mkdirSync, existsSync, writeFileSync } = require('node:fs');
 const { readFile, writeFile } = require('node:fs/promises');
 const { platform: _platform } = require('node:os');
 
-const DatabaseError = require('../DatabaseError');
+const DatabaseError = require('../../error/DatabaseError');
 
 /**
  * @abstract

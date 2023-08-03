@@ -23,7 +23,7 @@ module.exports = class Database {
     if (typeof options.autoWrite != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof options.autoWrite });
     if (typeof options.spaces != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof options.spaces });
 
-    options.driver ??= new Drivers.JSONDriver(options?.path, options?.name, options.spaces);
+    options.driver ??= new Drivers.JSON(options?.path, options?.name, options.spaces);
     if (!(options.driver instanceof Drivers.Base)) new DatabaseError({ message: `'${options.driver}' is not valid driver instance.` });
 
     /**
