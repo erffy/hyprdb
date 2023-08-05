@@ -1,0 +1,17 @@
+name: Codecov
+on: [push]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm i
+      - run: npm run start:esm
+      - name: Upload
+        uses: codecov/codecov-action@v3
+        with:
+         token: ${{secrets.CODECOV_TOKEN}}
+         name: Codecov
