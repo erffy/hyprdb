@@ -1,6 +1,15 @@
-[![Package](https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml)
-[![CodeQL](https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql)
-[![Codecov](https://github.com/erqeweew/hyprdb/actions/workflows/codecov.yml/badge.svg)](https://github.com/erqeweew/hyprdb/actions/workflows/codecov.yml)
+<div>
+  <br/>
+  <p>
+    <a href='https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml'><img src='https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml/badge.svg'/></a>
+    <a href='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql'><img src='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql/badge.svg'/></a>
+    <a href='https://github.com/erqeweew/hyprdb/actions/workflows/codecov.yml'><img src='https://github.com/erqeweew/hyprdb/actions/workflows/codecov.yml/badge.svg'/></a>
+    <br/>
+    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/v/hypr.db'/></a>
+    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/l/hypr.db'/></a>
+    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/github/issues/erqeweew/hyprdb'/></a>
+  </p>
+</div>
 
 # Hyper Database
 
