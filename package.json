@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/erqeweew/hyprdb/wiki",
   "author": "erqewee",
-  "license": "MIT",
+  "license": "LGPL-3.0-or-later",
   "dependencies": {
     "kleur": "^4.1.5"
   },
