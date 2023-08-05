@@ -207,16 +207,18 @@ module.exports = class BaseDriver extends Map {
 
   /**
    * Set.
-   * @param {Record<string, any>} obj
+   * @param {Record<string, any>} object
    * @param {string} path
    * @param {unknown} value
    * @returns {object}
    */
-  static set(obj, path, value) {
+  static set(object, path, value) {
     if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
+
+    let obj = { ...object };
 
     for (let index = 0; index < (keys.length - 1); index++) {
       const key = keys[index];
@@ -233,15 +235,17 @@ module.exports = class BaseDriver extends Map {
 
   /**
    * Get.
-   * @param {Record<string, any>} obj
+   * @param {Record<string, any>} object
    * @param {string} path
    * @returns {object}
    */
-  static get(obj, path) {
+  static get(object, path) {
     if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
+
+    let obj = { ...object };
 
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
@@ -255,15 +259,17 @@ module.exports = class BaseDriver extends Map {
 
   /**
    * Has.
-   * @param {Record<string, any>} obj
+   * @param {Record<string, any>} object
    * @param {string} path
    * @returns {boolean}
    */
-  static has(obj, path) {
+  static has(object, path) {
     if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
+
+    let obj = { ...object };
 
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
@@ -277,16 +283,18 @@ module.exports = class BaseDriver extends Map {
 
   /**
    * Merge.
-   * @param {Record<string, any>} obj
+   * @param {Record<string, any>} object
    * @param {object} source
    * @returns {object}
    */
-  static merge(obj, source) {
+  static merge(object, source) {
     if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof source != 'object') throw new TypeError(`'${source}' is not object.`);
 
+    let obj = { ...object };
+
     for (const key in source) {
-      if (typeof source[key] === 'object' && typeof obj[key] === 'object') BaseDriver.merge(obj[key], source[key]);
+      if (typeof source[key] === 'object' && typeof object[key] === 'object') BaseDriver.merge(obj[key], source[key]);
       else obj[key] = source[key];
     };
 
@@ -295,15 +303,17 @@ module.exports = class BaseDriver extends Map {
 
   /**
    * Unset.
-   * @param {Record<string, any>} obj
+   * @param {Record<string, any>} object
    * @param {string} path
    * @returns {boolean}
    */
-  static unset(obj, path) {
+  static unset(object, path) {
     if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
+
+    let obj = { ...object };
 
     for (let index = 0; index < (keys.length - 1); index++) {
       const key = keys[index];
