@@ -1,3 +1,5 @@
+[![Package](https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml)
+
 # Hyper Database
 
 - Faster, Lightweight and Small advanced Database.
