@@ -1,4 +1,5 @@
 [![Package](https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/erqeweew/hyprdb/actions/workflows/npm-publish.yml)
+[![CodeQL](https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql)
 
 # Hyper Database
 
