@@ -1,6 +1,6 @@
 {
   "name": "hypr.db",
-  "version": "5.1.2",
+  "version": "5.1.3",
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "./src/index.js",

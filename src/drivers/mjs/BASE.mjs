@@ -74,22 +74,6 @@ export default class BaseDriver extends Map {
   };
 
   /**
-   * Edit.
-   * @param {string} key 
-   * @param {unknown} value 
-   * @returns {Promise<unknown>}
-   */
-  async edit(key, value) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
-
-    if (!this.has(key)) return (await this.set(key, value));
-
-    this.delete(key);
-
-    return (await this.set(key, value));
-  };
-
-  /**
    * Get.
    * @param {string} key 
    * @returns {unknown}
