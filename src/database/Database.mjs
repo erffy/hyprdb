@@ -1,6 +1,7 @@
 import DatabaseError from '../error/DatabaseError.mjs';
-
 import * as Drivers from '../drivers/index.mjs';
+
+const __ping = (result) => console.log(`[${result.from} [${result.average}]] set: ${result.set} | get: ${result.get} | del: ${result.del}`);
 
 /**
  * Hyper Database.
@@ -63,7 +64,7 @@ export default class Database {
         other[options.callbackName](key, data[key]);
         obj[key] = true;
       } catch (error) {
-        throw new DatabaseError(`An error ocurred when assign. (${error})`);
+        throw new DatabaseError({ message: `AssignError: ${error}` });
       };
     };
 
@@ -126,11 +127,11 @@ export default class Database {
    * @param {string} key 
    * @param {number} amount
    * @param {boolean} negative
-   * @returns {number}
+   * @returns {Promise<number>}
    * @example db.add('result', 3);
    */
-  add(key, amount = 1, negative = false) {
-    return this.math(key, this.get(key), '+', amount, negative);
+  async add(key, amount = 1, negative = false) {
+    return (await this.math(key, this.get(key), '+', amount, negative));
   };
 
   /**
@@ -233,7 +234,7 @@ export default class Database {
     for (let index = 0; index < data.length; index++) {
       const { key, value } = data[index];
 
-      if (callback(value, key, index, this)) collected.set(key, value);
+      if (callback(value, key, index, this)) collected.set(key, value, false);
     };
 
     return collected;
@@ -242,7 +243,7 @@ export default class Database {
   /**
    * Find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
    * @param {(value: any, index: number, Database: this) => boolean} callback 
-   * @returns {boolean | any}
+   * @returns {boolean}
    * @example db.find((prop) => prop === '1.0');
    */
   find(callback = () => { }) {
@@ -272,7 +273,7 @@ export default class Database {
     for (let index = 0; index < data.length; index++) {
       const { key, value } = data[index];
 
-      if (callback(value, key, index, this)) this.update(key, newValue);
+      if (callback(value, key, index, this)) this.set(key, newValue, false);
     };
 
     return void 0;
@@ -281,21 +282,19 @@ export default class Database {
   /**
    * Find and delete.
    * @param {(value: any, key: string, index: number, Database: this) => boolean} callback 
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    */
-  findDelete(callback = () => { }) {
+  async findDelete(callback = () => { }) {
     if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
-
-    let state;
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
       const { key, value } = data[index];
 
-      if (callback(value, key, index, this)) state = this.del(key);
+      if (callback(value, key, index, this)) return (await this.del(key));
     };
 
-    return state;
+    return false;
   };
 
   /**
@@ -339,11 +338,11 @@ export default class Database {
    * @param {string} key 
    * @param {number} amount
    * @param {boolean} negative
-   * @returns {number}
+   * @returns {Promise<number>}
    * @example db.sub('result', 5);
    */
-  sub(key, amount = 1, negative = false) {
-    return this.math(key, this.get(key), '-', amount, negative);
+  async sub(key, amount = 1, negative = false) {
+    return (await this.math(key, this.get(key), '-', amount, negative));
   };
 
   /**
@@ -357,13 +356,11 @@ export default class Database {
 
     const collected = [];
 
-    const data = this.json();
+    const data = this.all();
+    for (let index = 0; index < data.length; index++) {
+      const { key, value } = data[index];
 
-    let index = 0;
-    for (const key in data) {
-      if (callback(data[key], key, index, this)) collected.push({ key, value: data[key] });
-
-      index++;
+      if (callback(value, key, index, this)) collected.push({ key, value });
     };
 
     return collected;
@@ -417,7 +414,7 @@ export default class Database {
    * Do Math operations easily!
    * @param {string} operator 
    * @param {number} count
-   * @returns {number}
+   * @returns {Promise<number>}
    * @example db.math('result', '/', 2);
    */
   async math(key, operator, count, negative = false) {
@@ -440,16 +437,16 @@ export default class Database {
 
     if (!negative && result < 0) result = 0;
 
-    return (await this.update(key, result));
+    return (await this.set(key, result));
   };
 
   /**
    * A function that accepts up to four arguments. The map method calls the callbackfn function one time for each element in the array.
    * Calls a defined callback function on each element of an array, and returns an array that contains the results.
    * @param {(value: any, key: string, index: number, Database: this) => boolean} callback 
-   * @returns {Promise<Database>}
+   * @returns {Database}
    */
-  async map(callback = () => { }) {
+  map(callback = () => { }) {
     if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
 
     const db = new this.constructor(this.options);
@@ -458,7 +455,7 @@ export default class Database {
     for (let index = 0; index < data.length; index++) {
       const { key, value } = data[index];
 
-      if (callback(value, key, index, this)) await db.set(key, value);
+      if (callback(value, key, index, this)) db.set(key, value, false);
     };
 
     return db;
@@ -478,7 +475,7 @@ export default class Database {
     if (!data) await this.set(key, values);
 
     if (Array.isArray(data)) {
-      if (this.options.overWrite) await this.update(key, values);
+      if (this.options.overWrite) await this.set(key, values);
       else await this.set(key, [...data, ...values]);
     } else await this.set(key, values);
 
@@ -509,39 +506,47 @@ export default class Database {
       if (!callback(value, index, this)) result.push(value);
     };
 
-    return (await this.update(key, result));
+    return (await this.set(key, result));
   };
 
   /**
-   * Database partitioning.
-   * @param {(value: any, key: string, index: number, Database: this) => boolean} callback
-   * @returns {Promise<Array<Database>>}
+   * Calculate database ping.
+   * @param {boolean} useDate - Use Date.now() instead of performance.now()
+   * @param {(results: { from: string, set: string, edit: string, get: string, del: string, average: string }) => any} callback
+   * @returns {Promise<{ from: string, set: string, edit: string, get: string, del: string, average: string }>}
    */
-  async partition(callback = () => { }) {
+  async ping(useDate = false, callback = __ping) {
+    if (typeof useDate != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof useDate });
     if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
 
-    const tables = [new this.constructor(this.options), new this.constructor(this.options)];
+    const random = (Math.floor(Math.random() * 100)).toString();
 
-    const data = this.all();
-    for (let index = 0; index < data.length; index++) {
-      const { key, value } = data[index];
+    const setStart = useDate ? Date.now() : performance.now();
+    await this.set(random, 0);
+    const setEnd = useDate ? Date.now() : performance.now();
 
-      if (callback(value, key, index, this)) await tables[0].set(key, value);
-      else await tables[1].set(key, value);
-    };
+    const getStart = useDate ? Date.now() : performance.now();
+    this.get(random);
+    const getEnd = useDate ? Date.now() : performance.now();
 
-    return tables;
-  };
+    const delStart = useDate ? Date.now() : performance.now();
+    await this.del(random);
+    const delEnd = useDate ? Date.now() : performance.now();
 
-  /**
-   * Update data from database.
-   * @param {string} key 
-   * @param {any} value 
-   * @returns {Promise<any>}
-   * @example db.update('key', 'newValue');
-   */
-  async update(key, value) {
-    return (await this.options.driver.update(key, value));
+    let set = (setEnd - setStart);
+    let get = (getEnd - getStart);
+    let del = (delEnd - delStart);
+    let average = (((set + get + del) / 3).toFixed(2)).concat('ms');
+
+    set = (set.toFixed(2)).concat('ms');
+    get = (get.toFixed(2)).concat('ms');
+    del = (del.toFixed(2)).concat('ms');
+
+    const results = { from: (((this.options.driver.constructor.name).split('Driver'))[0]), set, get, del, average };
+
+    callback(results);
+
+    return results;
   };
 
   /**
@@ -555,5 +560,5 @@ export default class Database {
    * @type string
    * @readonly
    */
-  static version = '5.1.0';
+  static version = '5.1.2';
 };

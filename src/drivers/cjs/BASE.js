@@ -29,6 +29,7 @@ module.exports = class BaseDriver extends Map {
     if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
 
     if (name) path += (platform != 'win32' ? `/${name}` : `\\${name}`);
+    if (!extension.startsWith('.')) extension = `.${extension}`;
     if (!path.endsWith(extension)) path += extension;
 
     /**
@@ -161,10 +162,11 @@ module.exports = class BaseDriver extends Map {
   async read(handler, encoding) {
     if (typeof handler != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof handler });
 
-    const data = await readFile(this.path, { encoding });
+    let data = await readFile(this.path, { encoding });
+    data ??= '{}';
 
     let handled = handler(data);
-    if (typeof handled?.then === 'function') handled = await handled.then((value) => value);
+    if (handled instanceof Promise) handled = await handled.then((value) => value);
 
     if (typeof handled != 'object') new DatabaseError({ type: 'Validation', expected: 'object', received: typeof handled });
 

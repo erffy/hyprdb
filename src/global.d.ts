@@ -34,7 +34,7 @@ declare module 'hypr.db' {
      * @param keyIndex Key index.
      * @param valueIndex Value index.
      */
-    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): void | string | any | { key: string, value: any };
+    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): { key: string | undefined, value: any };
 
     /**
      * Get all data from database.
@@ -54,7 +54,7 @@ declare module 'hypr.db' {
      * @param amount Amount to add.
      * @param negative Set it to be negative.
      */
-    public add<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
+    public add<K extends keyof V>(key: K, amount?: number, negative?: boolean): Promise<number>;
 
     /**
      * Clone database. (like Backup)
@@ -95,7 +95,7 @@ declare module 'hypr.db' {
      * A function that accepts up to four arguments. The filter method calls the predicate function one time for each element in the array.
      * @param callback
      */
-    public filter<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Database<V>;
+    public filter<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Promise<Database<V>>;
 
     /**
      * Find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
@@ -108,13 +108,13 @@ declare module 'hypr.db' {
      * @param value New value to replace.
      * @param callback
      */
-    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], key: K, index: number, Database: this) => boolean): void;
+    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Promise<void>;
 
     /**
      * Find the first value that satisfies the condition and delete it.
      * @param callback
      */
-    public findDelete<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): void;
+    public findDelete<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Promise<void>;
 
     /**
      * Get data from database.
@@ -141,7 +141,7 @@ declare module 'hypr.db' {
      * @param amount Amount to subtract.
      * @param negative Set it to be negative.
      */
-    public sub<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
+    public sub<K extends keyof V>(key: K, amount?: number, negative?: boolean): Promise<number>;
 
     /**
      * Search in database.
@@ -181,7 +181,7 @@ declare module 'hypr.db' {
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      * @param callback Condition
      */
-    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => any): Promise<void>;
+    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => any): Database<V>;
     
     /**
      * Push values to array.
@@ -198,17 +198,11 @@ declare module 'hypr.db' {
     public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, Database: this) => boolean): Promise<Array<V[K]>>;
 
     /**
-     * Database partitioning.
-     * @param callback 
+     * Calculate database ping.
+     * @param useDate Use 'Date.now()' instead of 'performance.now()'. ('performance.now()' requires Node v16.0.0 or newer.)
+     * @param callback
      */
-    public partition<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Promise<Array<Database<V>>>;
-    
-    /**
-     * Update entry from database. If key is not exists, creates new key.
-     * @param key Key
-     * @param value New Value
-     */
-    public update<K extends keyof V>(key: K, value?: V[K]): Promise<V[K]>;
+    public ping(useDate?: boolean, callback?: (result: { from: string, set: string, edit: string, get: string, del: string, average: string }) => any): Promise<{ from: string, set: string, edit: string, get: string, del: string, average: string }>;
 
     /**
      * Drivers.
@@ -270,7 +264,7 @@ declare module 'hypr.db' {
   // @ts-ignore
   export const Database = Database;
 
-  export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI | CSON;
+  export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI;
   export type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
   export type DatabaseSignature<V> = { [key in keyof V]: any };
   export type Encoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'ucs-2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex';
@@ -305,7 +299,6 @@ declare module 'hypr.db' {
     public get<K extends keyof V>(key: K): V[K];
     // @ts-ignore
     public has<K extends keyof V>(key: K): boolean;
-    public edit<K extends keyof V>(key: K, value?: V[K]): Promise<V[K]>;
     public unset<K extends keyof V>(key: K, autoWrite?: boolean): Promise<boolean>;
     public clone<K extends keyof V>(path: K): Promise<void>;
 
@@ -348,10 +341,6 @@ declare module 'hypr.db' {
   }
 
   class INI extends BSON {
-
-  }
-
-  class CSON extends BSON {
 
   }
 
