@@ -213,7 +213,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {object}
    */
   static set(object, path, value) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
+    if (typeof object != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -240,7 +240,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {object}
    */
   static get(object, path) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
+    if (typeof object != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -264,7 +264,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {boolean}
    */
   static has(object, path) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
+    if (typeof object != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
@@ -288,7 +288,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {object}
    */
   static merge(object, source) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
+    if (typeof object != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof source != 'object') throw new TypeError(`'${source}' is not object.`);
 
     let obj = { ...object };
@@ -308,7 +308,7 @@ module.exports = class BaseDriver extends Map {
    * @returns {boolean}
    */
   static unset(object, path) {
-    if (typeof obj != 'object') throw new TypeError(`'${obj}' is not object.`);
+    if (typeof object != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof path != 'string') throw new TypeError(`'${path}' is not string.`);
 
     const keys = path.split('.');
