@@ -218,19 +218,17 @@ module.exports = class BaseDriver extends Map {
 
     const keys = path.split('.');
 
-    let obj = { ...object };
-
     for (let index = 0; index < (keys.length - 1); index++) {
       const key = keys[index];
 
-      if (!obj[key]) obj[key] = {};
+      if (!object[key]) object[key] = {};
 
-      obj = obj[key];
+      object = object[key];
     };
 
-    obj[keys[keys.length - 1]] = value;
+    object[keys[keys.length - 1]] = value;
 
-    return obj;
+    return object;
   };
 
   /**
@@ -245,16 +243,14 @@ module.exports = class BaseDriver extends Map {
 
     const keys = path.split('.');
 
-    let obj = { ...object };
-
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
 
-      if (obj[key]) obj = obj[key];
+      if (object[key]) object = object[key];
       else return undefined;
     };
 
-    return obj;
+    return object;
   };
 
   /**
@@ -269,12 +265,10 @@ module.exports = class BaseDriver extends Map {
 
     const keys = path.split('.');
 
-    let obj = { ...object };
-
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
 
-      if (obj[key]) obj = obj[key];
+      if (object[key]) object = object[key];
       else return false;
     };
 
@@ -291,14 +285,12 @@ module.exports = class BaseDriver extends Map {
     if (typeof object != 'object') throw new TypeError(`'${obj}' is not object.`);
     if (typeof source != 'object') throw new TypeError(`'${source}' is not object.`);
 
-    let obj = { ...object };
-
     for (const key in source) {
-      if (typeof source[key] === 'object' && typeof object[key] === 'object') BaseDriver.merge(obj[key], source[key]);
-      else obj[key] = source[key];
+      if (typeof source[key] === 'object' && typeof object[key] === 'object') BaseDriver.merge(object[key], source[key]);
+      else object[key] = source[key];
     };
 
-    return obj;
+    return object;
   };
 
   /**
@@ -313,17 +305,15 @@ module.exports = class BaseDriver extends Map {
 
     const keys = path.split('.');
 
-    let obj = { ...object };
-
     for (let index = 0; index < (keys.length - 1); index++) {
       const key = keys[index];
 
-      if (!obj[key]) return false;
+      if (!object[key]) return false;
 
-      obj = obj[key];
+      object = object[key];
     };
 
-    delete obj[keys[keys.length - 1]];
+    delete object[keys[keys.length - 1]];
 
     return true;
   };
