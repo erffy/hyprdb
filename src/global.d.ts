@@ -44,9 +44,8 @@ declare module 'hypr.db' {
 
     /**
      * Convert database to array.
-     * @param options Array options.
      */
-    public array<K extends keyof V>(options?: { type: 'all' | 'keys' | 'values' }): void | Array<K> | Array<V[K]> | { keys: Array<K>, values: Array<V[K]> };
+    public array<K extends keyof V>(): { keys: Array<K>, values: Array<V[K]> };
 
     /**
      * Add specified number of values to the specified key.

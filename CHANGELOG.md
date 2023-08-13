@@ -2,6 +2,10 @@
 
 ## 5.x.x
 
+### 5.1.7
+> News
+- Some improvements.
+
 ### 5.1.6
 > Fixes
 - Some bugs fixed.

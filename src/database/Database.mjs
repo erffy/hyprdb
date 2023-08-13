@@ -19,10 +19,10 @@ export default class Database {
     options.overWrite ??= false;
     options.autoWrite ??= true;
 
-    if (typeof options.size != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof options.size });
-    if (typeof options.overWrite != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof options.overWrite });
-    if (typeof options.autoWrite != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof options.autoWrite });
-    if (typeof options.spaces != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof options.spaces });
+    if (typeof options.size != 'number') new DatabaseError({ expected: 'number', received: typeof options.size });
+    if (typeof options.overWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options.overWrite });
+    if (typeof options.autoWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options.autoWrite });
+    if (typeof options.spaces != 'number') new DatabaseError({ expected: 'number', received: typeof options.spaces });
 
     options.driver ??= new Drivers.JSON(options?.path, options?.name, options.spaces);
     if (!(options.driver instanceof Drivers.Base)) new DatabaseError({ message: `'${options.driver}' is not valid driver instance.` });
@@ -49,7 +49,7 @@ export default class Database {
    * @returns {Record<string, boolean>}
    */
   assign(other, options = {}) {
-    if (typeof options != 'object') new DatabaseError({ type: 'Validation', expected: 'object', received: typeof options });
+    if (typeof options != 'object') new DatabaseError({ expected: 'object', received: typeof options });
     if (!other?.constructor) new DatabaseError({ message: `'${options?.constructor}' is not valid constructor.` });
 
     options.callbackName ??= 'set';
@@ -58,7 +58,7 @@ export default class Database {
 
     const data = this.json();
     for (const key in data) {
-      if (typeof other[options.callbackName] != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof options.callbackName });
+      if (typeof other[options.callbackName] != 'function') new DatabaseError({ expected: 'function', received: typeof options.callbackName });
 
       try {
         other[options.callbackName](key, data[key]);
@@ -82,8 +82,8 @@ export default class Database {
     keyIndex ??= 0;
     valueIndex ??= 0;
 
-    if (typeof keyIndex != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof keyIndex });
-    if (typeof valueIndex != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof valueIndex });
+    if (typeof keyIndex != 'number') new DatabaseError({ expected: 'number', received: typeof keyIndex });
+    if (typeof valueIndex != 'number') new DatabaseError({ expected: 'number', received: typeof valueIndex });
 
     const array = this.array();
 
@@ -100,7 +100,7 @@ export default class Database {
    * @example db.all();
    */
   all(amount = 0) {
-    if (typeof amount != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof amount });
+    if (typeof amount != 'number') new DatabaseError({ expected: 'number', received: typeof amount });
 
     const obj = this.json();
 
@@ -114,12 +114,11 @@ export default class Database {
 
   /**
    * Convert database to array.
-   * @param {{ type?: 'all' | 'keys' | 'values' }} options
-   * @returns {Array<string> | Array<any> | { keys: Array<string>, values: Array<any> } | void}
-   * @example db.array(); db.array({ type: 'keys' }); db.array({ type: 'values' });
+   * @returns {{ keys: Array<string>, values: Array<any> }}
+   * @example db.array();
    */
-  array(options) {
-    return this.options.driver.array(options);
+  array() {
+    return this.options.driver.array();
   };
 
   /**
@@ -196,7 +195,7 @@ export default class Database {
    * @returns {boolean}
    */
   every(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
@@ -225,7 +224,7 @@ export default class Database {
    * @example db.filter((prop) => prop === '1.1');
    */
   filter(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const collected = new this.constructor(this.options);
 
@@ -247,7 +246,7 @@ export default class Database {
    * @example db.find((prop) => prop === '1.0');
    */
   find(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data = this.array({ type: 'values' });
 
@@ -267,7 +266,7 @@ export default class Database {
    * @returns {void}
    */
   findUpdate(newValue, callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
@@ -285,7 +284,7 @@ export default class Database {
    * @returns {Promise<boolean>}
    */
   async findDelete(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
@@ -352,7 +351,7 @@ export default class Database {
    * @example db.search((value, key, index) => key === 'hypr');
    */
   search(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const collected = [];
 
@@ -372,7 +371,7 @@ export default class Database {
    * @returns {boolean}
    */
   some(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data = this.all();
     for (let index = 0; index < data.length; index++) {
@@ -418,14 +417,14 @@ export default class Database {
    * @example db.math('result', '/', 2);
    */
   async math(key, operator, count, negative = false) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof key });
-    if (typeof operator != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof operator });
-    if (typeof count != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof count });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
+    if (typeof operator != 'string') new DatabaseError({ expected: 'string', received: typeof operator });
+    if (typeof count != 'number') new DatabaseError({ expected: 'number', received: typeof count });
 
     if (!this.exists(key)) await this.set(key, 0);
 
     const data = this.get(key);
-    if (typeof data != 'number') new DatabaseError({ type: 'Validation', expected: 'number', received: typeof data });
+    if (typeof data != 'number') new DatabaseError({ expected: 'number', received: typeof data });
 
     let result = data;
     if (operator === '+') result += count;
@@ -447,7 +446,7 @@ export default class Database {
    * @returns {Database}
    */
   map(callback = () => { }) {
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const db = new this.constructor(this.options);
 
@@ -469,7 +468,7 @@ export default class Database {
    * @example db.push('versions', '1.0', '1.1');
    */
   async push(key, ...values) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof key });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
 
     const data = this.get(key);
     if (!data) await this.set(key, values);
@@ -490,14 +489,14 @@ export default class Database {
    * @example db.pull('versions', (prop) => prop === '1.0'));
    */
   async pull(key, callback = () => { }) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof key });
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     if (!this.exists(key)) return null;
 
     const data = this.get(key);
 
-    if (!Array.isArray(data)) new DatabaseError({ type: 'Validation', expected: 'array', received: typeof data });
+    if (!Array.isArray(data)) new DatabaseError({ expected: 'array', received: typeof data });
 
     let result = [];
     for (let index = 0; index < data.length; index++) {
@@ -516,8 +515,8 @@ export default class Database {
    * @returns {Promise<{ from: string, set: string, edit: string, get: string, del: string, average: string }>}
    */
   async ping(useDate = false, callback = __ping) {
-    if (typeof useDate != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof useDate });
-    if (typeof callback != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof callback });
+    if (typeof useDate != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof useDate });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const random = (Math.floor(Math.random() * 100)).toString();
 
@@ -560,5 +559,5 @@ export default class Database {
    * @type string
    * @readonly
    */
-  static version = '5.1.2';
+  static version = '5.1.7';
 };

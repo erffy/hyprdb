@@ -3,7 +3,7 @@ import kleur from 'kleur';
 export default class DatabaseError extends Error {
   /**
    * Create a new Database error.
-   * @param {{ message: string, expected?: string, received?: string, type?: 'Validation' | 'Database' }} data
+   * @param {{ message: string, expected?: string, received?: string }} data
    * @constructor
    */
   constructor(data = {}) {
@@ -44,7 +44,7 @@ export default class DatabaseError extends Error {
   };
 
   toString() {
-    if (this.data.type === 'Validation') {
+    if (this.data?.expected) {
       const location = this.fetchLocation();
       const formattedTimestamp = this.timestamp.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' });
 

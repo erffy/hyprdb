@@ -3,7 +3,7 @@ const kleur = require('kleur');
 module.exports = class DatabaseError extends Error {
   /**
    * Create a new Database error.
-   * @param {{ message: string, code: number, expected?: string, received?: string, type?: 'Validation' | 'Database' }} data
+   * @param {{ message: string, expected?: string, received?: string }} data
    * @constructor
    */
   constructor(data = {}) {
@@ -37,14 +37,14 @@ module.exports = class DatabaseError extends Error {
 
     if (stackLines.length > 0) {
       const matched = (stackLines[1].trim()).match(/at\s+(.*):(\d+):(\d+)/);
-      if (matched) return { path: ((matched[1].split('('))[1]), line: ((matched[2].split(':'))[0]) };
+      if (matched) return { path: ((matched[1].split('file:///'))[1]), line: ((matched[2].split(':'))[0]) };
     };
 
     return { path: 'Unknown', line: 'Unknown' };
   };
 
   toString() {
-    if (this.data.type === 'Validation') {
+    if (this.data?.expected) {
       const location = this.fetchLocation();
       const formattedTimestamp = this.timestamp.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' });
 

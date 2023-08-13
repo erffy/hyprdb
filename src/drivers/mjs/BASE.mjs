@@ -21,9 +21,9 @@ export default class BaseDriver extends Map {
 
     path ??= process.cwd();
 
-    if (typeof path != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof path });
-    if (name && typeof name != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof name });
-    if (typeof extension != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof extension });
+    if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
+    if (name && typeof name != 'string') new DatabaseError({ expected: 'string', received: typeof name });
+    if (typeof extension != 'string') new DatabaseError({ expected: 'string', received: typeof extension });
 
     const __path = path.substring(0, path.lastIndexOf(platform != 'win32' ? '/' : '\\'));
     if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
@@ -60,12 +60,12 @@ export default class BaseDriver extends Map {
   /**
    * Set.
    * @param {string} key 
-   * @param {unknown} value
-   * @returns {Promise<unknown>}
+   * @param {any} value
+   * @returns {Promise<any>}
    */
   async set(key, value, autoWrite = true) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
-    if (typeof autoWrite != 'boolean') new DatabaseError({ type: 'Validation', expected: 'boolean', received: typeof autoWrite });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
+    if (typeof autoWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof autoWrite });
 
     super.set(key, value);
     if (autoWrite) await this.save();
@@ -76,10 +76,10 @@ export default class BaseDriver extends Map {
   /**
    * Get.
    * @param {string} key 
-   * @returns {unknown}
+   * @returns {any}
    */
   get(key) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
 
     return super.get(key);
   };
@@ -90,7 +90,7 @@ export default class BaseDriver extends Map {
    * @returns {boolean}
    */
   has(key) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
 
     return super.has(key);
   };
@@ -101,7 +101,7 @@ export default class BaseDriver extends Map {
    * @returns {boolean}
    */
   async unset(key, autoWrite = true) {
-    if (typeof key != 'string') new DatabaseError({ type: 'Validation', expected: 'key', received: typeof key });
+    if (typeof key != 'string') new DatabaseError({ expected: 'string', received: typeof key });
 
     const state = this.delete(key);
     if (autoWrite) await this.save();
@@ -112,14 +112,14 @@ export default class BaseDriver extends Map {
   /**
    * Clone.
    * @param {string} path 
-   * @param {unknown} bind
+   * @param {any} bind
    * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
    * @returns {Promise<void>}
    */
   async clone(path, bind, encoding) {
     path ??= `${this.path}-clone${this.extension}`;
 
-    if (typeof path != 'string') new DatabaseError({ type: 'Validation', expected: 'string', received: typeof path });
+    if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
     if (path.length < 1) new DatabaseError({ message: 'Invalid path.' });
 
     const __path = path.substring(0, path.lastIndexOf('/'));
@@ -139,12 +139,12 @@ export default class BaseDriver extends Map {
 
   /**
    * Read database file and save to cache.
-   * @param {(data: unknown) => unknown} handler 
+   * @param {(data: any) => any} handler 
    * @param {'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'base64' | 'base64url' | 'latin1' | 'binary' | 'hex'} encoding
    * @returns {Promise<void>}
    */
   async read(handler, encoding) {
-    if (typeof handler != 'function') new DatabaseError({ type: 'Validation', expected: 'function', received: typeof handler });
+    if (typeof handler != 'function') new DatabaseError({ expected: 'function', received: typeof handler });
 
     let data = await readFile(this.path, { encoding });
     data ??= '{}';
@@ -152,7 +152,7 @@ export default class BaseDriver extends Map {
     let handled = handler(data);
     if (handled instanceof Promise) handled = await handled.then((value) => value);
 
-    if (typeof handled != 'object') new DatabaseError({ type: 'Validation', expected: 'object', received: typeof handled });
+    if (typeof handled != 'object') new DatabaseError({ expected: 'object', received: typeof handled });
 
     for (const key in handled) super.set(key, handled[key]);
 
@@ -173,43 +173,26 @@ export default class BaseDriver extends Map {
 
   /**
    * Convert database to array.
-   * @param {{ type?: 'all' | 'keys' | 'values' }} options
-   * @returns {Array<string> | Array<unknown> | { keys: Array<string>, values: Array<unknown> } | void}
+   * @returns {Array<string> | Array<any> | { keys: Array<string>, values: Array<any> } | void}
    */
-  array(options = {}) {
-    if (typeof options != 'object') new DatabaseError({ type: 'Validation', expected: 'object', received: typeof options });
-
-    options.type ??= 'all';
-
+  array() {
     const data = this.json();
 
     const array = [[], []];
 
-    if (options.type === 'values') {
-      for (const key in data) array[1].push(data[key]);
-
-      return array[1];
-    } else if (options.type === 'keys') {
-      for (const key in data) array[0].push(key);
-
-      return array[0];
-    } else if (options.type === 'all') {
-      for (const key in data) {
-        array[0].push(key);
-        array[1].push(data[key]);
-      };
-
-      return { keys: array[0], values: array[1] };
+    for (const key in data) {
+      array[0].push(key);
+      array[1].push(data[key]);
     };
 
-    return void 0;
+    return { keys: array[0], values: array[1] };
   };
 
   /**
    * Set.
    * @param {Record<string, any>} object
    * @param {string} path
-   * @param {unknown} value
+   * @param {any} value
    * @returns {object}
    */
   static set(object, path, value) {
