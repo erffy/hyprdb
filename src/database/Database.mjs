@@ -559,5 +559,5 @@ export default class Database {
    * @type string
    * @readonly
    */
-  static version = '5.1.7';
+  static version = '5.1.8';
 };
