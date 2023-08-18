@@ -2,6 +2,18 @@
 
 ## 5.x.x
 
+### 5.1.9
+> News
+- Update notifier updated.
+- 'checkUpdate' option added.
+- 'ping' function improved.
+> Fixes
+- Some bugs fixed.
+
+### 5.1.8
+> News
+- Added update notifier.
+
 ### 5.1.7
 > News
 - Some improvements.

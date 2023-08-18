@@ -1,5 +1,5 @@
+const DatabaseUpdate = require('./DatabaseUpdate');
 const DatabaseError = require('../error/DatabaseError');
-
 const Drivers = require('../drivers/index');
 
 const __ping = (result) => console.log(`[${result.from} [${result.average}]] set: ${result.set} | get: ${result.get} | del: ${result.del}`);
@@ -15,18 +15,24 @@ module.exports = class Database {
    * @constructor
    */
   constructor(options = {}) {
+    const updater = new DatabaseUpdate(Database);
+
     options.size ??= 0;
     options.spaces ??= 2;
     options.overWrite ??= false;
     options.autoWrite ??= true;
-
+    options.checkUpdate ??= true;
+    
     if (typeof options.size != 'number') new DatabaseError({ expected: 'number', received: typeof options.size });
     if (typeof options.overWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options.overWrite });
     if (typeof options.autoWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options.autoWrite });
     if (typeof options.spaces != 'number') new DatabaseError({ expected: 'number', received: typeof options.spaces });
+    if (typeof options.checkUpdate != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options.checkUpdate });
 
     options.driver ??= new Drivers.JSON(options?.path, options?.name, options.spaces);
     if (!(options.driver instanceof Drivers.Base)) new DatabaseError({ message: `'${options.driver}' is not valid driver instance.` });
+
+    if (options.checkUpdate) updater.pull(updater.notify);
 
     /**
      * Database Options.
@@ -40,7 +46,7 @@ module.exports = class Database {
      * @type number
      * @readonly
      */
-    this.size = this.array({ type: 'keys' }).length;
+    this.size = this.array().keys.length;
   };
 
   /**
@@ -511,27 +517,29 @@ module.exports = class Database {
 
   /**
    * Calculate database ping.
-   * @param {boolean} useDate - Use Date.now() instead of performance.now()
    * @param {(results: { from: string, set: string, edit: string, get: string, del: string, average: string }) => any} callback
    * @returns {Promise<{ from: string, set: string, edit: string, get: string, del: string, average: string }>}
    */
-  async ping(useDate = false, callback = __ping) {
+  async ping(callback = __ping) {
     if (typeof useDate != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof useDate });
     if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
+    const version = Number((process.version.split('v'))[0]);
+    const runfn = (version > 15) ? performance.now : Date.now;
+
     const random = (Math.floor(Math.random() * 100)).toString();
 
-    const setStart = useDate ? Date.now() : performance.now();
+    const setStart = runfn();
     await this.set(random, 0);
-    const setEnd = useDate ? Date.now() : performance.now();
+    const setEnd = runfn();
 
-    const getStart = useDate ? Date.now() : performance.now();
+    const getStart = runfn();
     this.get(random);
-    const getEnd = useDate ? Date.now() : performance.now();
+    const getEnd = runfn();
 
-    const delStart = useDate ? Date.now() : performance.now();
+    const delStart = runfn();
     await this.del(random);
-    const delEnd = useDate ? Date.now() : performance.now();
+    const delEnd = runfn();
 
     let set = (setEnd - setStart);
     let get = (getEnd - getStart);
@@ -560,5 +568,5 @@ module.exports = class Database {
    * @type string
    * @readonly
    */
-  static version = '5.1.8';
+  static version = DatabaseUpdate.version;
 };

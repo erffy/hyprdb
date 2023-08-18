@@ -18,6 +18,7 @@
 ## Installation
 
 - This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
+- Updates: [Click Here](https://github.com/erqeweew/hyprdb/wiki/Updates)
 
 ## Features
 

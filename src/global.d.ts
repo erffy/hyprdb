@@ -198,10 +198,9 @@ declare module 'hypr.db' {
 
     /**
      * Calculate database ping.
-     * @param useDate Use 'Date.now()' instead of 'performance.now()'. ('performance.now()' requires Node v16.0.0 or newer.)
      * @param callback
      */
-    public ping(useDate?: boolean, callback?: (result: { from: string, set: string, edit: string, get: string, del: string, average: string }) => any): Promise<{ from: string, set: string, edit: string, get: string, del: string, average: string }>;
+    public ping(callback?: (result: PingResult) => any): Promise<PingResult>;
 
     /**
      * Drivers.
@@ -355,6 +354,12 @@ declare module 'hypr.db' {
     path?: string;
 
     /**
+     * Check hypr.db updates when created new database.
+     * @default true
+     */
+    checkUpdate?: boolean;
+
+    /**
      * Spaces. (Only JSON and JSON5)
      * @default 2
      */
@@ -383,6 +388,33 @@ declare module 'hypr.db' {
      * @default JSONDriver
      */
     driver?: AnyDatabaseDriver;
+  }
+
+  export interface PingResult {
+    /**
+     * Driver name.
+     */
+    from: string;
+
+    /**
+     * set function speed.
+     */
+    set: string;
+
+    /**
+     * get function speed.
+     */
+    get: string;
+
+    /**
+     * del function speed.
+     */
+    del: string;
+
+    /**
+     * average speed.
+     */
+    average: string;
   }
 
   export interface DatabaseMap {
