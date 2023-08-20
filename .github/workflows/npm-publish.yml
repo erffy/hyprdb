@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 20
       - run: npm i
-      - run: npm run start:esm
+      - run: npm run start
       
   publish-npm:
     needs: build
