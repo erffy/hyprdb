@@ -1,5 +1,16 @@
 # Patch Notes
 
+## 6.X.X
+
+## 6.0.0
+> News
+- Rewritten with TypeScript.
+- 'copy' function removed.
+- 'concat' function is now static.
+- Update notifier removed.
+> Fixes
+- All known bugs are fixed.
+
 ## 5.x.x
 
 ### 5.1.9
