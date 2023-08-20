@@ -18,6 +18,7 @@
   },
   "scripts": {
     "start": "node src/index",
+    "start": "node src/index",
     "build": "rm -rf src && tsc && prettier --write ./src"
   },
   "keywords": [
