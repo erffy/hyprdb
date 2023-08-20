@@ -4,12 +4,11 @@
   "private": false,
   "description": "Faster, Lightweight and Small Advanced database module.",
   "main": "src/index.js",
-  "module": "src/index.js",
-  "types": "src/global.d.ts",
+  "types": "global.d.ts",
   "exports": {
     ".": {
       "default": "./src/index.js",
-      "types": "./src/global.d.ts"
+      "types": "./src/index.d.ts"
     },
     "./drivers": {
       "default": "./src/drivers/index.js",
