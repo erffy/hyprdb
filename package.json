@@ -35,12 +35,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/erqeweew/hyprdb.git"
+    "url": "git+https://github.com/erffy/hyprdb.git"
   },
   "bugs": {
-    "url": "https://github.com/erqeweew/hyprdb/issues"
+    "url": "https://github.com/erffy/hyprdb/issues"
   },
-  "homepage": "https://github.com/erqeweew/hyprdb/wiki",
+  "homepage": "https://github.com/erffy/hyprdb/wiki",
   "author": "erqewee",
   "license": "Apache-2.0",
   "dependencies": {
