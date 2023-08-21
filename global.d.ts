@@ -1,3 +1,8 @@
+import { DatabaseOptions } from './lib/interfaces/DatabaseOptions';
+import { MathOperations } from './lib/interfaces/MathOperations';
+import { PingResult } from './lib/interfaces/PingResult';
+import { AnyDatabaseDriver } from './lib/interfaces/AnyDatabaseDriver';
+
 /**
  * Hyper Database Module.
  */
@@ -59,7 +64,7 @@ declare module 'hypr.db' {
      * Clone database. (like Backup)
      * @param path Clone path.
      */
-    public clone<K extends keyof V>(path?: K): void;
+    public clone(path?: string): void;
 
     /**
      * Delete data from database.
@@ -228,11 +233,6 @@ declare module 'hypr.db' {
       TOML,
 
       /**
-       * HJSON Driver.
-       */
-      HJSON,
-
-      /**
        * JSON5 Driver.
        */
       JSON5,
@@ -257,12 +257,9 @@ declare module 'hypr.db' {
   // @ts-ignore
   export const Database = Database;
 
-  export type AnyDatabaseDriver = Driver | JSON | YAML | BSON | TOML | JSON5 | HJSON | INI;
-  export type MathOperations = '+' | '-' | '/' | '**' | '*' | '%';
-  export type DatabaseSignature<V> = { [key in keyof V]: any };
   export type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
 
-  abstract class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map<string, V> {
+  abstract class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map {
     /**
      * Create new driver.
      * @param path Driver path.
@@ -285,14 +282,11 @@ declare module 'hypr.db' {
      */
     public readonly extension: string;
 
-    // @ts-ignore
     public override set<K extends keyof V>(key: K, value?: V[K], autoWrite?: boolean): V[K];
-    // @ts-ignore
     public override get<K extends keyof V>(key: K): V[K];
-    // @ts-ignore
     public override has<K extends keyof V>(key: K): boolean;
-    public unset<K extends keyof V>(key: K, autoWrite?: boolean): boolean;
-    public clone<K extends keyof V>(path: K): void;
+    public override delete<K extends keyof V>(key: K, autoWrite?: boolean): boolean;
+    public clone(path?: string): void;
 
     /**
      * Save database.
@@ -305,7 +299,7 @@ declare module 'hypr.db' {
      * @param handler Data handler.
      * @param encoding Encoding.
      */
-    public read(handler: (data: any) => any, encoding?: BufferEncoding): void;
+    public read(handler: (data: any) => Record<string, any>, encoding?: BufferEncoding): void;
   }
 
   class JSON extends Driver {
@@ -321,10 +315,6 @@ declare module 'hypr.db' {
   }
 
   class TOML extends BSON {
-
-  }
-
-  class HJSON extends BSON {
 
   }
 

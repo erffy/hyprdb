@@ -2,12 +2,22 @@
 
 ## 6.X.X
 
-## 6.0.0
+### 6.0.2
+> News
+- DatabaseError added again.
+- Some performance improvements.
+
+### 6.0.1
+> Fixes
+- Some typing paths fixed in package.json file.
+
+### 6.0.0
 > News
 - Rewritten with TypeScript.
 - 'copy' function removed.
 - 'concat' function is now static.
 - Update notifier removed.
+- DatabaseError removed.
 > Fixes
 - All known bugs are fixed.
 
