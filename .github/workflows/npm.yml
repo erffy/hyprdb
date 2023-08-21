@@ -1,0 +1,59 @@
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Setup Node
+        uses: actions/setup-node@master
+        with:
+          node-version: 20
+
+      - name: Setup Yarn
+        uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: yarn install
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Setup Node
+        uses: actions/setup-node@master
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+          
+      - name: Setup Typescript
+        uses: icrawl/action-tsc@v1
+        
+      - name: Setup Yarn
+        uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Publish
+        run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          
+      - name: Remove Build
+        run: rm -rf src
