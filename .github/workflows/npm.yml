@@ -45,7 +45,7 @@ jobs:
           node-version: 20
 
       - name: Setup TypeScript
-        run: npm i -g typescript
+        run: npm i -g typescript prettier
         
       - name: Install dependencies
         run: yarn install
