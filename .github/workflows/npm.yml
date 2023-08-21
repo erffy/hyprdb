@@ -39,14 +39,14 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
           
-      - name: Setup Typescript
-        uses: icrawl/action-tsc@v1
-        
       - name: Setup Yarn
         uses: DerYeger/yarn-setup-action@master
         with:
           node-version: 20
 
+      - name: Setup TypeScript
+        run: npm i -g typescript
+        
       - name: Install dependencies
         run: yarn install
 
