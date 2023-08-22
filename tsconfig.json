@@ -5,7 +5,10 @@
     "moduleDetection": "auto",
     "moduleResolution": "Node",
     "sourceMap": true,
-    "rootDir": "./",
+    "rootDirs": [
+      "./lib",
+      "./package.json"
+    ],
     "outDir": "./src",
     "removeComments": false,
     "esModuleInterop": true,
