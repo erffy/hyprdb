@@ -62,7 +62,8 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_GITHUB }}
-
+          NPM_CONFIG_REGISTRY: https://npm.pkg.github.com/
+          
       - name: Remove .npmrc
         run: rm -rf $HOME/.npmrc
         
