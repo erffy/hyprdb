@@ -85,6 +85,7 @@
     "node": ">=15.0.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "@erffy:registry": "https://npm.pkg.github.com"
   }
 }
