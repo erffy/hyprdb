@@ -1,0 +1,42 @@
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 20
+      - uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 20
+      - run: yarn install
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com/
+      - uses: DerYeger/yarn-setup-action@master
+        with:
+          node-version: 20
+      - run: npm i -g typescript prettier
+      - run: yarn install
+      - run: yarn run build
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_GITHUB }}
+      - run: rm -rf src
