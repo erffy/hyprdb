@@ -2,6 +2,9 @@ import { DatabaseOptions } from './lib/interfaces/DatabaseOptions';
 import { MathOperations } from './lib/interfaces/MathOperations';
 import { PingResult } from './lib/interfaces/PingResult';
 import { AnyDatabaseDriver } from './lib/interfaces/AnyDatabaseDriver';
+import { DriverOptions } from './lib/interfaces/DriverOptions';
+import { DatabaseSignature } from './lib/interfaces/DatabaseSignature';
+import { DatabaseMap } from './lib/interfaces/DatabaseMap';
 
 /**
  * Hyper Database Module.
@@ -303,18 +306,18 @@ declare module 'hypr.db' {
   }
 
   class JSON extends Driver {
-    public constructor(path?: string, name?: string, spaces?: number);
+    public constructor(options?: DriverOptions);
   }
 
-  class BSON extends Driver {
-    public constructor(path?: string, name?: string);
-  }
-
-  class YAML extends BSON {
+  class BSON extends JSON {
 
   }
 
-  class TOML extends BSON {
+  class YAML extends JSON {
+
+  }
+
+  class TOML extends JSON {
 
   }
 
@@ -322,86 +325,7 @@ declare module 'hypr.db' {
 
   }
 
-  class INI extends BSON {
+  class INI extends JSON {
 
-  }
-
-  /**
-   * Database Options.
-   * @interface
-   */
-  export interface DatabaseOptions {
-    /**
-     * Database Name.
-     * @default hypr
-     */
-    name?: string;
-
-    /**
-     * Check hypr.db updates when created new database.
-     * @default true
-     */
-    updates?: boolean;
-
-    /**
-     * Spaces. (Only JSON and JSON5)
-     * @default 2
-     */
-    spaces?: number;
-
-    /**
-     * Database Size.
-     * @default 0
-     */
-    size: number;
-
-    /**
-     * Database Overwrite. (Only 'push' method.)
-     * @default true
-     */
-    overWrite?: boolean;
-
-    /**
-     * Database Autowrite.
-     * @default true
-     */
-    autoWrite?: boolean;
-
-    /**
-     * Database Driver.
-     * @default JSONDriver
-     */
-    driver: AnyDatabaseDriver;
-  }
-
-  export interface PingResult {
-    /**
-     * Driver name.
-     */
-    from: string;
-
-    /**
-     * set function speed.
-     */
-    set: string;
-
-    /**
-     * get function speed.
-     */
-    get: string;
-
-    /**
-     * del function speed.
-     */
-    del: string;
-
-    /**
-     * average speed.
-     */
-    average: string;
-  }
-
-  export interface DatabaseMap {
-    [key: string]: any;
   }
 }

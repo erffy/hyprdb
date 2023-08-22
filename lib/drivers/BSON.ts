@@ -1,23 +1,26 @@
-import Driver from './Base';
-import bson from 'bson';
+import Driver, { DriverOptions } from './Driver';
+import { serialize, deserialize } from 'bson';
 
-export default class BSONDriver extends Driver {
-  public constructor(path?: string, name?: string) {
-    super(path, name, '.bson');
+export class BSON extends Driver {
+  public constructor(options?: DriverOptions) {
+    super(options);
 
-    Driver.write(this.path, bson.serialize({}), 'binary');
+    if (this.options?.experimentalFeatures) process.on('beforeExit', () => this.save());
+
+    // @ts-ignore
+    Driver.write(this.options.path, serialize({}), 'binary');
     this.read();
   };
 
   public override clone(path?: string): void {
-    return super.clone(path, bson.serialize(this.json()));
+    return super.clone(path, serialize(this.json()));
   };
 
   public override save(): void {
-    return super.save(bson.serialize(this.json()), 'binary');
+    return super.save(serialize(this.json()), 'binary');
   };
 
   public override read(): void {
-    return super.read(bson.deserialize);
+    return super.read(deserialize);
   };
 };

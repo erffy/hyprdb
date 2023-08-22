@@ -1,23 +1,22 @@
-import Driver from './Base';
+import Driver, { DriverOptions, DriverDefaultOptions } from './Driver';
 
-export default class JSONDriver extends Driver {
-  private readonly spaces: number;
+export class JSONDriver extends Driver {
+  public constructor(options: DriverOptions = DriverDefaultOptions) {
+    super({ type: 'json', ...options });
 
-  public constructor(path?: string, name?: string, spaces: number = 2) {
-    super(path, name, '.json');
+    if (this.options?.experimentalFeatures) process.on('beforeExit', () => this.save());
 
-    this.spaces = spaces;
-
-    Driver.write(this.path, JSON.stringify({}), 'utf8');
+    // @ts-ignore
+    Driver.write(this.options.path, JSON.stringify({}), 'utf8');
     this.read();
   };
 
   public override clone(path?: string): void {
-    return super.clone(path, JSON.stringify(this.json(), null, this.spaces));
+    return super.clone(path, JSON.stringify(this.json(), null, this.options.spaces));
   };
 
   public override save(): void {    
-    return super.save(JSON.stringify(this.json(), null, this.spaces), 'utf8');
+    return super.save(JSON.stringify(this.json(), null, this.options.spaces), 'utf8');
   };
 
   public override read(): void {

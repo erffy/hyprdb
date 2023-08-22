@@ -1,24 +1,27 @@
-import Driver from './Base';
-import yaml from 'js-yaml';
+import Driver, { DriverOptions } from './Driver';
+import { load, dump } from 'js-yaml';
 
-export default class YAMLDriver extends Driver {
-  public constructor(path?: string, name?: string) {
-    super(path, name, '.yaml');
+export class YAML extends Driver {
+  public constructor(options?: DriverOptions) {
+    super(options);
 
-    Driver.write(this.path, yaml.load(JSON.stringify({})), 'utf8');
+    if (this.options?.experimentalFeatures) process.on('beforeExit', () => this.save());
+
+    // @ts-ignore
+    Driver.write(this.options.path, load(JSON.stringify({})), 'utf8');
     this.read();
   };
   
   public override clone(path?: string): void {
-    return super.clone(path, yaml.load(JSON.stringify(this.json())));
+    return super.clone(path, load(JSON.stringify(this.json())));
   };
   
   public override save(): void {
-    return super.save(yaml.dump(this.json()), 'utf8');
+    return super.save(dump(this.json()), 'utf8');
   };
 
   public override read(): void {
     // @ts-ignore
-    return super.read(yaml.load, 'utf8');
+    return super.read(load, 'utf8');
   };
 };

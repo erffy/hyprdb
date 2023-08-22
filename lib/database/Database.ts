@@ -1,9 +1,11 @@
+import { version } from '../../package.json';
+
 import DatabaseError from './DatabaseError';
 import * as Drivers from '../drivers/index';
 
 import { DatabaseSignature } from '../interfaces/DatabaseSignature';
 import { DatabaseMap } from '../interfaces/DatabaseMap';
-import { DatabaseOptions } from '../interfaces/DatabaseOptions';
+import { DatabaseOptions, DatabaseDefaultOptions } from '../interfaces/DatabaseOptions';
 import { PingResult } from '../interfaces/PingResult';
 import { MathOperations } from '../interfaces/MathOperations';
 
@@ -11,24 +13,17 @@ const __ping = (result: PingResult) => console.log(`[${result.from} [${result.av
 
 export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   public size: number;
-  protected options: DatabaseOptions;
+  protected readonly options: DatabaseOptions;
 
-  public constructor(options: DatabaseOptions = {
-    driver: (new Drivers.JSON()),
-    size: 0,
-    overWrite: false,
-    autoWrite: true
-  }) {
-    if (typeof options != 'object') throw new DatabaseError({ expected: 'object', received: typeof options });
-
-    if (!(options.driver instanceof Drivers.Base)) throw new DatabaseError({ message: '\'options.driver\' is invalid driver.' });
+  public constructor(options: DatabaseOptions = DatabaseDefaultOptions) {
+    Database.checkOptions(options);
 
     this.options = options;
     this.size = ((this.array()).keys).length;
   };
 
   public assign(other: any, options: { callbackName?: string } = {}): Readonly<Record<string, boolean>> {
-    if (!other?.constructor) throw new DatabaseError({ message: '\'other\' is not a constructor.' });
+    if (!other?.constructor) new DatabaseError({ message: '\'other\' is not a constructor.' });
 
     options.callbackName ??= 'set';
 
@@ -36,13 +31,13 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
 
     const data: Record<string, any> = this.json();
     for (const key in data) {
-      if (typeof other[options.callbackName] != 'function') throw new DatabaseError({ message: `'${other.constructor.name}.${options.callbackName}' is not function.` });
+      if (typeof other[options.callbackName] != 'function') new DatabaseError({ message: `'${other.constructor.name}.${options.callbackName}' is not function.` });
 
       try {
         other[options.callbackName](key, data[key]);
         Object.defineProperty(obj, key, { value: true, writable: false, configurable: false, enumerable: true });
       } catch (error) {
-        throw new DatabaseError({ message: `AssignError: ${error}` });
+        new DatabaseError({ message: `AssignError: ${error}` });
       };
     };
 
@@ -53,8 +48,8 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
     keyIndex ??= 0;
     valueIndex ??= 0;
 
-    if (typeof keyIndex != 'number') throw new DatabaseError({ expected: 'number', received: typeof keyIndex });
-    if (typeof valueIndex != 'number') throw new DatabaseError({ expected: 'number', received: typeof valueIndex });
+    if (typeof keyIndex != 'number') new DatabaseError({ expected: 'number', received: typeof keyIndex });
+    if (typeof valueIndex != 'number') new DatabaseError({ expected: 'number', received: typeof valueIndex });
 
     const array = this.array();
 
@@ -65,7 +60,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public all<K extends keyof V>(amount: number = 0): Array<{ key: K, value: V[K] }> {
-    if (typeof amount != 'number') throw new DatabaseError({ expected: 'number', received: typeof amount });
+    if (typeof amount != 'number') new DatabaseError({ expected: 'number', received: typeof amount });
 
     const obj: Record<K, V[K]> = this.json();
 
@@ -98,7 +93,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public every<K extends keyof V>(callback: Function): boolean {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data: Array<{ key: K, value: V[K] }> = this.all();
     for (let index: number = 0; index < data.length; index++) {
@@ -116,7 +111,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public filter<K extends keyof V>(callback: Function): Database<V> {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const db: Database<V> = new Database<V>(this.options);
 
@@ -131,7 +126,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public find<K extends keyof V>(callback: Function): boolean | V[K] {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     let collected: boolean = false;
 
@@ -149,7 +144,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public findUpdate<K extends keyof V>(newValue: V[K], callback: Function): boolean {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     let updated: boolean = false;
 
@@ -166,7 +161,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public findDelete<K extends keyof V>(callback: Function): boolean {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     let deleted: boolean = false;
 
@@ -204,7 +199,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public search<K extends keyof V>(callback: Function): Array<{ key: K, value: V[K] }> {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const collected: Array<{ key: K, value: V[K] }> = [];
 
@@ -219,7 +214,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public some<K extends keyof V>(callback: Function): boolean {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const data: Array<{ key: K, value: V[K] }> = this.all();
     for (let index: number = 0; index < data.length; index++) {
@@ -247,14 +242,14 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public math<K extends keyof V>(key: K, operator: MathOperations, count: number, negative: boolean = false): number {
-    if (typeof operator != 'string') throw new DatabaseError({ expected: 'string', received: typeof operator });
-    if (typeof count != 'number') throw new DatabaseError({ expected: 'number', received: typeof count });
+    if (typeof operator != 'string') new DatabaseError({ expected: 'string', received: typeof operator });
+    if (typeof count != 'number') new DatabaseError({ expected: 'number', received: typeof count });
 
     // @ts-ignore
     if (!this.exists(key)) this.set(key, 0);
 
     const data: any = this.get(key);
-    if (typeof data != 'number') throw new DatabaseError({ expected: 'number', received: typeof data });
+    if (typeof data != 'number') new DatabaseError({ expected: 'number', received: typeof data });
 
     let result: number = data;
     if (operator === '+') result += count;
@@ -271,7 +266,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public map<K extends keyof V>(callback: Function): Database<V> {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const db: Database<V> = new Database<V>(this.options);
 
@@ -302,7 +297,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public pull<K extends keyof V>(key: K, callback: Function): V[K] | undefined | null {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     if (!this.exists(key)) return null;
 
@@ -321,7 +316,7 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   public ping(callback: Function = __ping): PingResult {
-    if (typeof callback != 'function') throw new DatabaseError({ expected: 'function', received: typeof callback });
+    if (typeof callback != 'function') new DatabaseError({ expected: 'function', received: typeof callback });
 
     const version: number = Number((process.version.split('v'))[0]);
     const runfn = (version > 15) ? performance.now : Date.now;
@@ -360,8 +355,8 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
   };
 
   static concat(databases: Array<Database>, options: DatabaseOptions): Database {
-    if (!Array.isArray(databases)) throw new DatabaseError({ expected: 'array', received: typeof databases });
-    if (typeof options != 'object') throw new DatabaseError({ expected: 'object', received: typeof options });
+    if (!Array.isArray(databases)) new DatabaseError({ expected: 'array', received: typeof databases });
+    if (typeof options != 'object') new DatabaseError({ expected: 'object', received: typeof options });
 
     const db: Database = new Database(options);
 
@@ -373,6 +368,22 @@ export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
     return db;
   };
 
+  static checkOptions(options: DatabaseOptions): void {
+    if (typeof options != 'object') new DatabaseError({ expected: 'object', received: typeof options });
+
+    options.autoWrite ??= DatabaseDefaultOptions.autoWrite;
+    options.overWrite ??= DatabaseDefaultOptions.overWrite;
+    options.size ??= DatabaseDefaultOptions.size;
+    options.spaces ??= DatabaseDefaultOptions.spaces;
+    options.driver ??= DatabaseDefaultOptions.driver;
+
+    if (!(options?.driver instanceof Drivers.Driver)) new DatabaseError({ message: 'Invalid database driver.' });
+    if (typeof options?.autoWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options?.autoWrite });
+    if (typeof options?.overWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof options?.overWrite });
+    if (typeof options?.size != 'number') new DatabaseError({ expected: 'number', received: typeof options?.size });
+    if (typeof options?.spaces != 'number') new DatabaseError({ expected: 'number', received: typeof options?.spaces });
+  };
+
   static readonly Drivers = Drivers;
-  static readonly version = '6.0.2';
+  static readonly version = version;
 };

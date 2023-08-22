@@ -1,45 +1,32 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'graceful-fs';
 import { platform as _platform } from 'node:os';
 
 import DatabaseError from '../database/DatabaseError';
 
 import { DatabaseSignature } from '../interfaces/DatabaseSignature';
 import { DatabaseMap } from '../interfaces/DatabaseMap';
+import { DriverOptions, DriverDefaultOptions } from '../interfaces/DriverOptions';
 
-export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> extends Map {
+export class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map {
+  protected readonly options: DriverOptions;
 
-  /**
-   * Database Path.
-   */
-  public readonly path: string;
-  /**
-   * Database Name.
-   */
-  public readonly name: string;
-  /**
-   * Database Extension.
-   */
-  public readonly extension: string;
+  public constructor(options: DriverOptions = DriverDefaultOptions) {
+    super();
 
-  public constructor(path: string = process.cwd(), name: string = 'hypr', extension: string) {
     const platform = _platform();
 
-    super();
-    
-    if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
-    if (typeof name != 'string') new DatabaseError({ expected: 'string', received: typeof name });
-    if (typeof extension != 'string') new DatabaseError({ expected: 'string', received: typeof extension });
+    options.type ??= this.constructor.name.toLowerCase();
+    Driver.checkOptions(options);
 
-    const __path = path.substring(0, path.lastIndexOf(platform != 'win32' ? '/' : '\\'));
+    // @ts-ignore
+    const __path: string = options.path.substring(0, options.path.lastIndexOf(platform != 'win32' ? '/' : '\\'));
     if (!existsSync(__path)) mkdirSync(__path, { recursive: true });
 
-    if (name) path += (platform != 'win32' ? `/${name}` : `\\${name}`);
-    if (!extension.startsWith('.')) extension = `.${extension}`;
-    if (!path.endsWith(extension)) path += extension;
-
-    this.path = path;
-    this.name = name;
-    this.extension = extension;
+    if (options.name) options.path += (platform != 'win32' ? `/${options.name}` : `\\${options.name}`);
+    // @ts-ignore
+    if (!options.path.endsWith(options.type)) options.path += options.type;
+    
+    this.options = options;
   };
 
   public override set<K extends keyof V>(key: K, value: V[K], autoWrite: boolean = true): V[K] {
@@ -47,7 +34,7 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     if (typeof autoWrite != 'boolean') new DatabaseError({ expected: 'boolean', received: typeof autoWrite });
 
     super.set(key, value);
-    if (autoWrite) this.save();
+    if (autoWrite && !this.options?.experimentalFeatures) this.save();
 
     return value;
   };
@@ -74,7 +61,7 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     return state;
   };
 
-  public clone(path: string = `${this.path}-clone${this.extension}`, bind?: any, encoding?: BufferEncoding): void {
+  public clone(path: string = `${this.options.path}-clone.${this.options.type}`, bind?: any, encoding?: BufferEncoding): void {
     if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
     if (path.length < 1) throw new RangeError(`'${path}' is not valid path.`);
 
@@ -85,14 +72,16 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
   };
 
   public save(data?: any, encoding?: BufferEncoding): void {
-    return writeFileSync(this.path, Buffer.from(data), { encoding });
+    // @ts-ignore
+    return writeFileSync(this.options.path, Buffer.from(data), { encoding });
   };
 
   public read(handler: (data: any) => Record<string, any>, encoding?: BufferEncoding): void {
     if (typeof handler != 'function') new DatabaseError({ expected: 'function', received: typeof handler });
 
-    let data = readFileSync(this.path, { encoding });
-    data ??= '{}';
+    // @ts-ignore
+    let data: Buffer | string = readFileSync(this.options.path, { encoding });
+    data ??= '{}'; 
 
     const handled: Record<string, any> = handler(data);
     for (const key in handled) super.set(key, handled[key]);
@@ -103,7 +92,7 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
   public json<K extends keyof V>(): Record<K, V[K]> {
     const obj: Record<any, V[K]> = {};
 
-    for (const [key, value] of this) BaseDriver.set(obj, key, value);
+    for (const [key, value] of this) Driver.set(obj, key, value);
 
     return obj;
   };
@@ -121,7 +110,7 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     return { keys: array[0], values: array[1] };
   };
 
-  static set(object: Record<string, any>, path: string, value?: any): object {
+  static set(object: Record<string, any>, path: string, value?: any): Record<string, any> {
     if (typeof object != 'object') new DatabaseError({ expected: 'object', received: typeof object });
     if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
 
@@ -140,7 +129,7 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     return object;
   };
 
-  static get(object: Record<string, any>, path: string): object | undefined {
+  static get(object: Record<string, any>, path: string): Record<string, any> | undefined {
     if (typeof object != 'object') new DatabaseError({ expected: 'object', received: typeof object });
     if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
 
@@ -172,13 +161,13 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     return true;
   };
 
-  static merge(object: Record<string, any>, source: object) {
+  static merge(object: Record<string, any>, source: object): Record<string, any> {
     if (typeof object != 'object') new DatabaseError({ expected: 'object', received: typeof object });
     if (typeof source != 'object') new DatabaseError({ expected: 'object', received: typeof source });
 
     for (const key in source) {
       // @ts-ignore
-      if (typeof source[key] === 'object' && typeof object[key] === 'object') BaseDriver.merge(object[key], source[key]);
+      if (typeof source[key] === 'object' && typeof object[key] === 'object') Driver.merge(object[key], source[key]);
       // @ts-ignore
       else object[key] = source[key];
     };
@@ -186,7 +175,7 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     return object;
   };
 
-  static unset(object: Record<string, any>, path: string) {
+  static unset(object: Record<string, any>, path: string): boolean {
     if (typeof object != 'object') new DatabaseError({ expected: 'object', received: typeof object });
     if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
 
@@ -205,10 +194,28 @@ export default class BaseDriver<V extends DatabaseSignature<V> = DatabaseMap> ex
     return true;
   };
 
-  static write(path: string, data?: any, encoding?: BufferEncoding) {
+  static write(path: string, data?: any, encoding?: BufferEncoding): void {
     if (typeof path != 'string') new DatabaseError({ expected: 'string', received: typeof path });
 
     if (existsSync(path)) return void 0;
     else return writeFileSync(path, data, { encoding });
   };
+
+  static checkOptions(options: DriverOptions) {
+    if (typeof options != 'object') new DatabaseError({ expected: 'object', received: typeof options });
+
+    options.name ??= DriverDefaultOptions.name;
+    options.path ??= DriverDefaultOptions.path;
+    options.experimentalFeatures ??= DriverDefaultOptions.experimentalFeatures;
+
+    if (typeof options?.name != 'string') new DatabaseError({ expected: 'string', received: typeof options?.name });
+    if (typeof options?.type != 'string') new DatabaseError({ expected: 'string', received: typeof options?.type });
+    if (typeof options?.path != 'string') new DatabaseError({ expected: 'string', received: typeof options?.path });
+    if (typeof options?.experimentalFeatures != 'boolean') new DatabaseError({ expected: 'string', received: typeof options?.experimentalFeatures });
+
+    return options;
+  };
 };
+
+export default Driver;
+export * from '../interfaces/DriverOptions';

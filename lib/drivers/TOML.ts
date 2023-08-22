@@ -1,25 +1,28 @@
-import Driver from './Base';
-import toml from '@iarna/toml';
+import Driver, { DriverOptions } from './Driver';
+import { stringify, parse } from '@iarna/toml';
 
-export default class TOMLDriver extends Driver {
-  public constructor(path?: string, name?: string) {
-    super(path, name, '.toml');
+export class TOML extends Driver {
+  public constructor(options?: DriverOptions) {
+    super(options);
 
-    Driver.write(this.path, toml.stringify({}), 'utf8');
+    if (this.options?.experimentalFeatures) process.on('beforeExit', () => this.save());
+
+    // @ts-ignore
+    Driver.write(this.options.path, stringify({}), 'utf8');
     this.read();
   };
 
   public override clone(path?: string): void {
     // @ts-ignore
-    return super.clone(path, toml.stringify(this.json()));
+    return super.clone(path, stringify(this.json()));
   };
 
   public override save(): void {
     // @ts-ignore
-    return super.save(toml.stringify(this.json()), 'utf8');
+    return super.save(stringify(this.json()), 'utf8');
   };
 
   public override read(): void {
-    return super.read(toml.parse, 'utf8');
+    return super.read(parse, 'utf8');
   };
 };

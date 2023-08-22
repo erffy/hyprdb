@@ -1,15 +1,9 @@
-import { AnyDatabaseDriver } from './AnyDatabaseDriver';
+import Drivers, { AnyDatabaseDriver } from './AnyDatabaseDriver';
 
 /**
  * Database Options.
  */
 export interface DatabaseOptions {
-  /**
-   * Database Name.
-   * @default hypr
-   */
-  name?: string;
-
   /**
    * Spaces. (Only JSON and JSON5)
    * @default 2
@@ -39,4 +33,15 @@ export interface DatabaseOptions {
    * @default JSONDriver
    */
   driver: AnyDatabaseDriver;
+};
+
+/**
+ * Default Database Options.
+ */
+export const DatabaseDefaultOptions: DatabaseOptions = {
+  driver: (new Drivers.JSON()),
+  size: 0,
+  spaces: 2,
+  autoWrite: true,
+  overWrite: false
 };

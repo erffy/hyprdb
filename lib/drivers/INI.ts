@@ -1,23 +1,26 @@
-import Driver from './Base';
-import ini from 'ini';
+import Driver, { DriverOptions } from './Driver';
+import { stringify, parse } from 'ini';
 
-export default class INIDriver extends Driver {
-  public constructor(path?: string, name?: string) {
-    super(path, name, '.ini');
+export class INI extends Driver {
+  public constructor(options?: DriverOptions) {
+    super(options);
 
-    Driver.write(this.path, ini.stringify({}), 'utf8');
+    if (this.options?.experimentalFeatures) process.on('beforeExit', () => this.save());
+
+    // @ts-ignore
+    Driver.write(this.options.path, stringify({}), 'utf8');
     this.read();
   };
 
   public override clone(path?: string): void {
-    return super.clone(path, ini.stringify(this.json()));
+    return super.clone(path, stringify(this.json()));
   };
 
   public override save(): void {
-    return super.save(ini.stringify(this.json()), 'utf8');
+    return super.save(stringify(this.json()), 'utf8');
   };
 
   public override read(): void {
-    return super.read(ini.parse, 'utf8');
+    return super.read(parse, 'utf8');
   };
 };
