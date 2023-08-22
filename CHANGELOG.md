@@ -2,7 +2,11 @@
 
 ## 6.X.X
 
-### 6.1.0
+### 6.1.3
+> Fixes
+- tsconfig fixed.
+
+### 6.1.0 & 6.1.1 & 6.1.2
 > News
 - New option added: 'experimentalFeatures' - This option currently changes save method. (Increases performance but this may damage your database.)
   * Updates your database before exiting the NodeJS Process.

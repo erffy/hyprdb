@@ -1,4 +1,4 @@
-import { version } from '../../package.json';
+const version: string = '6.1.3';
 
 import DatabaseError from './DatabaseError';
 import * as Drivers from '../drivers/index';
