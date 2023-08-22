@@ -7,7 +7,6 @@
     "sourceMap": true,
     "rootDir": "./",
     "outDir": "./src",
-    "declarationDir": "./src/types",
     "removeComments": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
