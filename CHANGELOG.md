@@ -2,6 +2,16 @@
 
 ## 6.X.X
 
+### 6.1.0
+> News
+- New option added: 'experimentalFeatures' - This option currently changes save method. (Increases performance but this may damage your database.)
+  * Updates your database before exiting the NodeJS Process.
+- Some performance improvements.
+- Drivers improved.
+> Fixes
+- Some typings are fixed.
+- Some bugs are fixed.
+
 ### 6.0.2
 > News
 - DatabaseError added again.
