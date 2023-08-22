@@ -9,14 +9,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-node@master
+      - name: Post Checkout
+        uses: actions/checkout@master
+        
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
           node-version: 20
-      - uses: DerYeger/yarn-setup-action@master
+      - name: Setup Yarn
+        uses: DerYeger/yarn-setup-action@master
         with:
           node-version: 20
-      - run: yarn install
 
   publish:
     needs: build
@@ -24,18 +27,33 @@ jobs:
     permissions:
      id-token: write
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-node@master
+      - name: Post Checkout
+        uses: actions/checkout@master
+        
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org/
-      - uses: DerYeger/yarn-setup-action@master
+          registry-url: https://registry.npmjs.org
+          
+      - name: Setup Yarn
+        uses: DerYeger/yarn-setup-action@master
         with:
           node-version: 20
-      - run: npm i -g typescript prettier
-      - run: yarn install
-      - run: yarn run build
-      - run: npm publish
+          
+      - name: Install TypeScript & Prettier
+        run: npm i -g typescript prettier
+
+      - name: Install Dependencies
+        run: yarn install
+        
+      - name: Build
+        run: yarn run build
+        
+      - name: Publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: rm -rf src
+          
+      - name: Remove Build
+        run: rm -rf src
