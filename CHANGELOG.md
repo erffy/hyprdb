@@ -2,13 +2,21 @@
 
 ## v7
 #### IMPORTANT
+<<<<<<< HEAD
 - In v7 version, all drivers have been removed. We only use JSON, because we now write into it in hex and json format using the '.vstore' and '.json' extension.
+=======
+- In v7 version, all drivers have been removed. We only use JSON, because we now write into it in hex format using the '.vstore' extension.
+>>>>>>> 77197a9434dabd8c5ea67ed458cfa51909b8e668
   * If you want to use other drivers please use v6.
 
 ### 7.0.0
 > News
+<<<<<<< HEAD
 - Added '.vstore' for hex encoding. If you want to enable, pass the 'useHexEncoding: true' in database driver options.
 - DatabaseError removed.
+=======
+- Types changed.
+>>>>>>> 77197a9434dabd8c5ea67ed458cfa51909b8e668
 - Some improvements.
 - Some driver functions are now 'protected' instead of 'public': read and save.
 - 'value' is now required argument.
