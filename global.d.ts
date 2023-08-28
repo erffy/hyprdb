@@ -1,17 +1,14 @@
 import { DatabaseOptions } from './lib/interfaces/DatabaseOptions';
 import { MathOperations } from './lib/interfaces/MathOperations';
 import { PingResult } from './lib/interfaces/PingResult';
-import { AnyDatabaseDriver } from './lib/interfaces/AnyDatabaseDriver';
 import { DriverOptions } from './lib/interfaces/DriverOptions';
-import { DatabaseSignature } from './lib/interfaces/DatabaseSignature';
-import { DatabaseMap } from './lib/interfaces/DatabaseMap';
 
 /**
  * Hyper Database Module.
  */
 declare module 'hypr.db' {
   // @ts-ignore
-  export default class Database<V extends DatabaseSignature<V> = DatabaseMap> {
+  export default class Database<V = any> {
     /**
      * Create new Database.
      * @param options Database options.
@@ -22,7 +19,12 @@ declare module 'hypr.db' {
     /**
      * Database options.
      */
-    private options: DatabaseOptions;
+    protected readonly options: DatabaseOptions;
+
+    /**
+     * Database driver.
+     */
+    protected readonly driver: Driver<V>;
 
     /**
      * Database size.
@@ -35,25 +37,26 @@ declare module 'hypr.db' {
      * @param other Database class.
      * @param options Assign options.
      */
-    public assign(other: any, options?: { callbackName?: string }): Record<string, boolean>;
+    public assign(other: any, options?: { callbackName?: string }): Readonly<Record<string, boolean>>;
 
     /**
      * Get data with index.
      * @param keyIndex Key index.
      * @param valueIndex Value index.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at Array#at}
      */
-    public at<I extends number>(keyIndex?: I | number, valueIndex?: I | number): { key: string | undefined, value: V };
+    public at(keyIndex?: number, valueIndex?: number): { key: string, value: V };
 
     /**
      * Get all data from database.
      * @param amount Amount of data
      */
-    public all<K extends keyof V>(amount?: number): Array<{ key: K, value: V[K] }>;
+    public all(amount?: number): Array<{ key: string, value: V }>;
 
     /**
      * Convert database to array.
      */
-    public array<K extends keyof V>(): { keys: Array<K>, values: Array<V[K]> };
+    public array(): { keys: Array<string>, values: Array<V> };
 
     /**
      * Add specified number of values to the specified key.
@@ -61,75 +64,79 @@ declare module 'hypr.db' {
      * @param amount Amount to add.
      * @param negative Set it to be negative.
      */
-    public add<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
-
-    /**
-     * Clone database. (like Backup)
-     * @param path Clone path.
-     */
-    public clone(path?: string): void;
+    public add(key: string, amount?: number, negative?: boolean): number;
 
     /**
      * Delete data from database.
      * @param key Key
      */
-    public del<K extends keyof V>(key: K): boolean;
+    public del(key: string): boolean;
 
     /**
      * Determines whether all the members of an array satisfy the specified test.
-     * @param callback 
+     * @param callback
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every Array#every}
      */
-    public every<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): boolean;
+    public every(callback?: (value: V, key: string, index: number, Database: this) => boolean): boolean;
+
+    /**
+     * Performs the specified action for each element in an array.
+     * @param callback 
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach Array#forEach}
+     */
+    public each(callback?: (value: V, key: string, index: number, Database: this) => any): void;
 
     /**
      * Check key is exists in database.
      * @param key Key
      */
-    public exists<K extends keyof V>(key: K): boolean;
+    public exists(key: string): boolean;
 
     /**
      * A function that accepts up to four arguments. The filter method calls the predicate function one time for each element in the array.
      * @param callback
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter Array#filter}
      */
-    public filter<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Database<V>;
+    public filter(callback?: (value: V, key: string, index: number, Database: this) => boolean): Database<V>;
 
     /**
      * Find calls predicate once for each element of the array, in ascending order, until it finds one where predicate returns true. If such an element is found, find immediately returns that element value. Otherwise, find returns undefined.
      * @param callback Condition
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find Array#find}
      */
-    public find<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): boolean | V[K];
+    public find(callback?: (value: V, key: string, index: number, Database: this) => boolean): V | undefined;
 
     /**
      * Find the first value that satisfies the condition and update to new value.
      * @param value New value to replace.
      * @param callback
      */
-    public findUpdate<K extends keyof V>(value: V[K], callback?: (value: V[K], key: K, index: number, Database: this) => boolean): void;
+    public findUpdate(value: V, callback?: (value: V, key: string, index: number, Database: this) => boolean): void;
 
     /**
      * Find the first value that satisfies the condition and delete it.
      * @param callback
      */
-    public findDelete<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): void;
+    public findDelete(callback?: (value: V, key: string, index: number, Database: this) => boolean): void;
 
     /**
      * Get data from database.
      * @param key Key
      */
-    public get<K extends keyof V>(key: K): V[K];
+    public get(key: string): V;
 
     /**
      * Check key is exists in database.
      * @param key Key
      */
-    public has<K extends keyof V>(key: K): boolean;
+    public has(key: string): boolean;
 
     /**
      * Set data to database.
      * @param key Key
      * @param value Value
      */
-    public set<K extends keyof V>(key: K, value?: V[K]): V[K];
+    public set(key: string, value: V): V;
 
     /**
      * Subtraction in database over key.
@@ -137,19 +144,20 @@ declare module 'hypr.db' {
      * @param amount Amount to subtract.
      * @param negative Set it to be negative.
      */
-    public sub<K extends keyof V>(key: K, amount?: number, negative?: boolean): number;
+    public sub(key: string, amount?: number, negative?: boolean): number;
 
     /**
      * Search in database.
      * @param callback
      */
-    public search<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): Array<{ key: string, value: V }>;
+    public search(callback?: (value: V, key: string, index: number, Database: this) => boolean): Array<{ key: string, value: V }>;
 
     /**
      * Determines whether the specified callback function returns true for any element of an array.
      * @param callback 
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some Array#some}
      */
-    public some<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => boolean): boolean;
+    public some(callback?: (value: V, key: string, index: number, Database: this) => boolean): boolean;
 
     /**
      * Convert database to json.
@@ -160,7 +168,7 @@ declare module 'hypr.db' {
      * Get data type of stored value in key.
      * @param key Key
      */
-    public type<K extends keyof V>(key: K): DataTypes;
+    public type(key: string): DataTypes;
 
     /**
      * Do math in easily.
@@ -169,29 +177,29 @@ declare module 'hypr.db' {
      * @param count Count.
      * @param negative Set it to be negative.
      */
-    public math<K extends keyof V>(key: K, operator: MathOperations, count: number, negative?: boolean): number;
+    public math(key: string, operator: MathOperations, count: number, negative?: boolean): number;
 
     /**
      * A function that accepts up to four arguments. The map method calls the callbackfn function one time for each element in the array.
      * Calls a defined callback function on each element of an array, and returns an array that contains the results.
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      * @param callback Condition
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map Array#map}
      */
-    public map<K extends keyof V>(callback?: (value: V[K], key: K, index: number, Database: this) => any): Database<V>;
+    public map(callback?: (value: V, key: string, index: number, Database: this) => boolean): Database<V>;
 
     /**
      * Push values to array.
      * @param key Key
      * @param values Values to push.
      */
-    public push<K extends keyof V>(key: K, ...values: V[K]): void;
+    public push(key: string, ...values: Array<V>): void;
 
     /**
      * Pulls data from array.
      * @param key Key
      * @param callback
      */
-    public pull<K extends keyof V>(key: K, callback?: (value: V[K], index: number, Database: this) => boolean): Array<V[K]>;
+    public pull(key: string, callback?: (value: V, index: number, Database: this) => boolean): Array<V> | undefined;
 
     /**
      * Calculate database ping.
@@ -203,48 +211,7 @@ declare module 'hypr.db' {
      * Concat databases.
      * @param databases Hypr databases to concat.
      */
-    static concat(...databases: Array<Database>): Database;
-
-    /**
-     * Drivers.
-     */
-    // @ts-ignore
-    static readonly Drivers = {
-      /**
-       * Driver.
-       */
-      Driver,
-
-      /**
-       * BSON Driver.
-       */
-      BSON,
-
-      /**
-       * YAML Driver.
-       */
-      YAML,
-
-      /**
-       * JSON Driver.
-       */
-      JSON,
-
-      /**
-       * TOML Driver.
-       */
-      TOML,
-
-      /**
-       * JSON5 Driver.
-       */
-      JSON5,
-
-      /**
-       * INI Driver.
-       */
-      INI
-    }
+    static concat<V = any>(databases: Array<Database<V>>, options: DriverOptions): Database<V>;
 
     /**
      * Database version.
@@ -252,80 +219,44 @@ declare module 'hypr.db' {
     static readonly version: string;
   }
 
-  /**
-   * Database Drivers.
-   */
-  // @ts-ignore
-  export const Drivers = Database.Drivers;
-  // @ts-ignore
-  export const Database = Database;
+  export { Database };
 
-  export type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function' | 'NaN' | 'finite';
+  export type DataTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'array' | 'undefined' | 'object' | 'function';
 
-  abstract class Driver<V extends DatabaseSignature<V> = DatabaseMap> extends Map {
+  class Driver<V = any> extends Map<string, V> {
     /**
-     * Create new driver.
-     * @param path Driver path.
-     * @param name Driver name. (file)
-     * @param extension Driver extension.
+     * Create new Database Driver.
      * @constructor
      */
-    public constructor(path?: string, name?: string, extension?: string);
+    public constructor(options?: DriverOptions);
 
-    /**
-     * Database path.
-     */
-    public readonly path: string;
-    /**
-     * Database name.
-     */
-    public readonly name: string;
-    /**
-     * Database extension.
-     */
-    public readonly extension: string;
+    protected readonly options: DriverOptions;
 
-    public override set<K extends keyof V>(key: K, value?: V[K], autoWrite?: boolean): V[K];
-    public override get<K extends keyof V>(key: K): V[K];
-    public override has<K extends keyof V>(key: K): boolean;
-    public override delete<K extends keyof V>(key: K, autoWrite?: boolean): boolean;
-    public clone(path?: string): void;
+    public override set(key: string, value: V): V;
+    public override get(key: string): V | undefined;
+    public override has(key: string): boolean;
+    public override delete(key: string): boolean;
+    public array(): { keys: Array<string>, values: Array<V> };
+    public json(): Record<string, V>;
+
+    protected static encode(data: string): string;
+    protected static decode(data: string): string;
+    protected static set(object: Record<string, any>, path: string, value: any): Record<string, any>;
+    protected static get(object: Record<string, any>, path: string): Record<string, any> | undefined;
+    protected static has(object: Record<string, any>, path: string): boolean;
+    protected static unset(object: Record<string, any>, path: string): boolean;
+    protected static write(object: Record<string, any>, path: string): void;
+    static checkOptions(options: DriverOptions): DriverOptions;
 
     /**
      * Save database.
      * @param data Data to save database file.
-     * @param encoding Encoding
      */
-    public save(data: any, encoding?: BufferEncoding): void;
+    protected save(data?: Record<string, V>): void;
+
     /**
      * Read database and save to cache.
-     * @param handler Data handler.
-     * @param encoding Encoding.
      */
-    public read(handler: (data: any) => Record<string, any>, encoding?: BufferEncoding): void;
-  }
-
-  class JSON extends Driver {
-    public constructor(options?: DriverOptions);
-  }
-
-  class BSON extends JSON {
-
-  }
-
-  class YAML extends JSON {
-
-  }
-
-  class TOML extends JSON {
-
-  }
-
-  class JSON5 extends JSON {
-
-  }
-
-  class INI extends JSON {
-
+    protected read(): void;
   }
 }

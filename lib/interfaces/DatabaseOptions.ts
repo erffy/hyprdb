@@ -1,4 +1,4 @@
-import Drivers, { AnyDatabaseDriver } from './AnyDatabaseDriver';
+import { DriverOptions, DriverDefaultOptions } from './DriverOptions';
 
 /**
  * Database Options.
@@ -14,7 +14,7 @@ export interface DatabaseOptions {
    * Database Size.
    * @default 0
    */
-  size: number;
+  size?: number;
 
   /**
    * Database Overwrite. (Only 'push' method.)
@@ -29,19 +29,19 @@ export interface DatabaseOptions {
   autoWrite?: boolean;
 
   /**
-   * Database Driver.
-   * @default JSONDriver
+   * Driver options.
+   * @default DriverDefaultOptions
    */
-  driver: AnyDatabaseDriver;
+  driver?: DriverOptions;
 };
 
 /**
  * Default Database Options.
  */
 export const DatabaseDefaultOptions: DatabaseOptions = {
-  driver: (new Drivers.JSON()),
   size: 0,
   spaces: 2,
   autoWrite: true,
-  overWrite: false
+  overWrite: false,
+  driver: DriverDefaultOptions
 };

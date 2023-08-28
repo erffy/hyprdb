@@ -15,27 +15,32 @@ export interface DriverOptions {
   name?: string;
 
   /**
-   * Driver Type.
-   * @default 'constructor name'
-   */
-  type?: string;
-
-  /**
-   * Spaces. (Only available on 'JSON' and 'JSON5')
+   * Spaces.
+   * 
+   * Note: Only available when 'useHexEncoding' is 'false'.
    * @default 2
    */
   spaces?: number;
 
   /**
-   * Enable Experimental Features.
+   * Use old save method instead of new save method
+   * 
+   * Note: This can affect your performance.
    * @default false
    */
-  experimentalFeatures?: boolean;
+  useOldSaveMethod?: boolean;
+
+  /**
+   * Use hex encoding when save to file.
+   * @default false
+   */
+  useHexEncoding?: boolean;
 };
 
 export const DriverDefaultOptions: DriverOptions = {
   path: process.cwd(),
   name: 'hypr',
   spaces: 2,
-  experimentalFeatures: false
+  useOldSaveMethod: false,
+  useHexEncoding: false
 };

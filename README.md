@@ -5,7 +5,7 @@
     <br/>
     <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/v/hypr.db'/></a>
     <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/l/hypr.db'/></a>
-    <a href='https://socket.dev/npm/package/hypr.db/issues'><img src='https://socket.dev/api/badge/npm/package/hypr.db'/></a>
+    <!-- <a href='https://socket.dev/npm/package/hypr.db/issues'><img src='https://socket.dev/api/badge/npm/package/hypr.db'/></a> -->
     <br/>
     <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/github/issues/erqeweew/hyprdb'/></a>
   </p>
@@ -18,22 +18,26 @@
 ## Installation
 
 - This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
-- Updates: [Click Here](https://github.com/erqeweew/hyprdb/wiki/Updates)
+- Full ChangeLog: [Click Here](https://github.com/erqeweew/hyprdb/wiki/Updates)
 
-## Features
-
-- This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
+## ChangeLog
+#### IMPORTANT
+- In v7 version, all drivers have been removed. We only use JSON, because we now write into it in hex and json format using the '.vstore' and '.json' extension.
+  * If you want to use other drivers please use v6.
+  
+> News
+- Added '.vstore' for hex encoding. If you want to enable, pass the 'useHexEncoding: true' in database driver options.
+- DatabaseError removed.
+- Some improvements.
+- Some driver functions are now 'protected' instead of 'public': read and save.
+- 'value' is now required argument.
+- Experimental Save method (tested and) changed with old save method.
+  * If you want to use old save method pass the 'useOldSaveMethod: true' option in driver options.
+    * Note: This option will be removed in future v7 releases.
+> Fixes
+- Some typing bugs are fixed.
+- Some bugs are fixed.
 
 ## Usage
 
-- We are supporting typing with [TypeScript](https://typescriptlang.org).
-
-```ts
-// ESM
-import Database from 'hypr.db';
-const db = new Database<{ 'hypr': string }>();
-
-db.set('hypr', 'ok');
-```
-
-- The rest of this section has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
+- This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)

@@ -2,8 +2,8 @@
   "semi": true,
   "singleQuote": false,
   "arrowParens": "always",
-  "endOfLine": "auto",
+  "endOfLine": "lf",
   "tabWidth": 2,
-  "useTabs": true,
+  "useTabs": false,
   "trailingComma": "es5"
 }

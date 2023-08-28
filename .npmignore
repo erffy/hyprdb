@@ -1,5 +1,4 @@
 lib/database
-lib/drivers
 lib/index.ts
 .npmrc
 .prettierrc

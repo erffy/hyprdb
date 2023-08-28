@@ -1,6 +1,25 @@
 # Patch Notes
 
-## 6.X.X
+## v7
+#### IMPORTANT
+- In v7 version, all drivers have been removed. We only use JSON, because we now write into it in hex and json format using the '.vstore' and '.json' extension.
+  * If you want to use other drivers please use v6.
+
+### 7.0.0
+> News
+- Added '.vstore' for hex encoding. If you want to enable, pass the 'useHexEncoding: true' in database driver options.
+- DatabaseError removed.
+- Some improvements.
+- Some driver functions are now 'protected' instead of 'public': read and save.
+- 'value' is now required argument.
+- Experimental Save method (tested and) changed with old save method.
+  * If you want to use old save method pass the 'useOldSaveMethod: true' option in driver options.
+    * Note: This option will be removed in future v7 releases.
+> Fixes
+- Some typing bugs are fixed.
+- Some bugs are fixed.
+
+## v6
 
 ### 6.1.3
 > Fixes
@@ -35,7 +54,7 @@
 > Fixes
 - All known bugs are fixed.
 
-## 5.x.x
+## v5
 
 ### 5.1.9
 > News

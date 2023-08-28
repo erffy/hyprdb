@@ -1,36 +1,25 @@
 {
   "name": "hypr.db",
-  "version": "6.1.3",
-  "private": false,
+  "version": "7.0.0",
   "description": "Faster, Lightweight and Small Advanced database module.",
+  "author": "erffy",
+  "license": "GPL-3.0-or-later",
   "main": "src/index.js",
   "types": "global.d.ts",
   "exports": {
-    ".": {
-      "default": "./src/index.js",
-      "types": "./src/index.d.ts"
-    },
-    "./drivers": {
-      "default": "./src/drivers/index.js",
-      "types": "./src/drivers/index.d.ts"
-    }
+    "default": "./src/index.js",
+    "types": "./global.d.ts"
   },
   "scripts": {
     "start": "node src/index",
-    "start:esm": "node src/index",
     "build": "rm -rf src && tsc && prettier --write ./src"
   },
   "keywords": [
     "db",
     "database",
     "json",
-    "bson",
-    "yaml",
     "hyper",
-    "hypr",
-    "ini",
-    "json5",
-    "toml"
+    "hypr"
   ],
   "repository": {
     "type": "git",
@@ -40,52 +29,14 @@
     "url": "https://github.com/erffy/hyprdb/issues"
   },
   "homepage": "https://github.com/erffy/hyprdb/wiki",
-  "author": "erffy",
-  "license": "Apache-2.0",
-  "dependencies": {
-    "graceful-fs": "^4.2.11",
-    "kleur": "^4.1.5"
-  },
-  "peerDependencies": {
-    "@iarna/toml": "^2.x",
-    "bson": "^5.x",
-    "ini": "^4.x",
-    "js-yaml": "^4.x",
-    "json5": "^2.x",
-    "yaml": "^2.x"
-  },
-  "peerDependenciesMeta": {
-    "@iarna/toml": {
-      "optional": true
-    },
-    "bson": {
-      "optional": true
-    },
-    "ini": {
-      "optional": true
-    },
-    "js-yaml": {
-      "optional": true
-    },
-    "json5": {
-      "optional": true
-    }
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@iarna/toml": "^2.2.5",
-    "@types/graceful-fs": "^4.1.6",
-    "@types/ini": "^1.3.31",
-    "@types/js-yaml": "^4.0.5",
-    "@types/node": "^20.5.2",
-    "bson": "^5.4.0",
-    "ini": "^4.1.1",
-    "js-yaml": "^4.1.0",
-    "json5": "^2.2.3",
-    "typescript": "^5.1.6"
+    "@types/node": "latest"
   },
   "engines": {
-    "node": ">=15.0.0"
+    "node": ">=14.0.0"
   },
+  "private": false,
   "publishConfig": {
     "access": "public",
     "provenance": true
