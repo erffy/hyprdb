@@ -15,10 +15,13 @@
 
 - Faster, Lightweight and Small advanced Database.
 
-## Installation & Usage
+## Installation
 
 - This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
 - Full ChangeLog: [Click Here](https://github.com/erqeweew/hyprdb/wiki/Updates)
+
+## Usage
+- [Snappify](https://snappify.com/embed/ec1c6ac6-dda8-4c92-99f0-a2d49c2bf834?responsive=1)
 
 ## ChangeLog
 #### IMPORTANT
