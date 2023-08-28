@@ -15,7 +15,7 @@
 
 - Faster, Lightweight and Small advanced Database.
 
-## Installation
+## Installation & Usage
 
 - This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
 - Full ChangeLog: [Click Here](https://github.com/erqeweew/hyprdb/wiki/Updates)
@@ -37,7 +37,3 @@
 > Fixes
 - Some typing bugs are fixed.
 - Some bugs are fixed.
-
-## Usage
-
-- This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
