@@ -1,15 +1,9 @@
-import { DriverOptions, DriverDefaultOptions } from './DriverOptions';
+import Driver from 'drivers/Driver';
 
 /**
  * Database Options.
  */
 export interface DatabaseOptions {
-  /**
-   * Spaces. (Only JSON and JSON5)
-   * @default 2
-   */
-  spaces?: number;
-
   /**
    * Database Size.
    * @default 0
@@ -29,19 +23,26 @@ export interface DatabaseOptions {
   autoWrite?: boolean;
 
   /**
-   * Driver options.
-   * @default DriverDefaultOptions
+   * Database Driver.
+   * @default JSONDriver
    */
-  driver?: DriverOptions;
+  driver?: Driver;
+};
+
+export interface DatabaseOptionsBase extends DatabaseOptions {
+  size: number;
+  overWrite: boolean;
+  autoWrite: boolean;
+  driver: Driver;
 };
 
 /**
  * Default Database Options.
  */
-export const DatabaseDefaultOptions: DatabaseOptions = {
+export const DatabaseOptionsDefault: DatabaseOptions = {
   size: 0,
-  spaces: 2,
   autoWrite: true,
-  overWrite: false,
-  driver: DriverDefaultOptions
+  overWrite: false
 };
+
+export default DatabaseOptions;

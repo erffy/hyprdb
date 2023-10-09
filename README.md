@@ -1,7 +1,7 @@
 <div>
   <p>
     <a href='https://github.com/erqeweew/hyprdb/actions/workflows/npm.yml'><img src='https://github.com/erffy/hyprdb/actions/workflows/npm.yml/badge.svg'/></a>
-    <a href='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql'><img src='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql/badge.svg'/></a>
+    <a href='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql'><img src='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql/badge svg'/></a>
     <br/>
     <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/v/hypr.db'/></a>
     <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/l/hypr.db'/></a>
@@ -13,30 +13,93 @@
 
 # Hyper Database
 
-- Faster, Lightweight and Small advanced Database.
+- Faster, Lightweight and Small Map-based advanced Database.
 
-## Installation
+## [Installation](https://github.com/erffy/hyprdb/wiki#installation)
 
-- This part has been moved to [GitHub Wiki](https://github.com/erqeweew/hyprdb/wiki)
-- Full ChangeLog: [Click Here](https://github.com/erqeweew/hyprdb/wiki/Updates)
+- We recommend to use [yarn](https://npmjs.com/yarn).
+```bash
+yarn add hypr.db
+```
+
+## [ChangeLog](https://github.com/erqeweew/hyprdb/wiki/Updates)
+> News
+- Added DatabaseManager. (*)
+- Added BSON driver.
+
+- Removed 'useOldSaveMethod' option from Database.
+- Removed 'useHexEncoding' option from Database.
+- Removed 'ping' function from Database.
+- Driver class is now abstract and protected.
+- The 'concat' function is now public in Database.
+
+> Misc
+- Some improvements.
+
+> Fixes
+- Small bug fixed in 'all' function of database.
+
+* Experimental feature
 
 ## Usage
-- [Snappify](https://snappify.com/embed/ec1c6ac6-dda8-4c92-99f0-a2d49c2bf834?responsive=1)
 
-## ChangeLog
-#### IMPORTANT
-- In v7 version, all drivers have been removed. We only use JSON, because we now write into it in hex and json format using the '.vstore' and '.json' extension.
-  * If you want to use other drivers please use v6.
-  
-> News
-- Added '.vstore' for hex encoding. If you want to enable, pass the 'useHexEncoding: true' in database driver options.
-- DatabaseError removed.
-- Some improvements.
-- Some driver functions are now 'protected' instead of 'public': read and save.
-- 'value' is now required argument.
-- Experimental Save method (tested and) changed with old save method.
-  * If you want to use old save method pass the 'useOldSaveMethod: true' option in driver options.
-    * Note: This option will be removed in future v7 releases.
-> Fixes
-- Some typing bugs are fixed.
-- Some bugs are fixed.
+- A simple example is given below.
+
+```js
+// ESM (ECMAScript) (& TypeScript)
+import Database, { BSONDriver, JSONDriver } from 'hypr.db';
+
+// CJS (Common)
+const Database = require('hypr.db');
+
+// Create Database (JSON (Default Options))
+const db = new Database();
+// Create Database (JSON)
+const db = new Database({ driver: new JSONDriver() }); // You can enter the driver options however you want.
+// Create Database (BSON)
+const db = new Database({ driver: new BSONDriver() }); // You can enter the driver options however you want.
+
+// set & get & del & has & exists
+db.set('MyCoolKey', 'MyCoolValue');
+db.get('MyCoolKey');
+db.del('MyCoolKey');
+db.has('MyCoolKey');
+db.exists('MyCoolKey'); // Same with has
+
+// find+ & filter & each & map & every & some & search
+db.find((value) => value === 'MyCoolValue');
+db.findUpdate('MyNewCoolValue', (value) => value === 'MyCoolValue');
+db.findDelete((value) => value === 'MyNewCoolValue');
+db.filter((value) => value === 'MyNewCoolValue');
+db.each((value, key) => typeof db.get(key) === typeof value);
+db.map((value, key) => typeof value === 'number');
+db.every((value) => value === 'MyCoolValue'),
+db.some((value) => value === 'MyCoolValue');
+db.search((value) => value === 'MyCoolValue');
+
+// other
+db.assign(otherDatabase, 'set'); // Argument 2 is optional.
+db.concat([hdb1, hdb2, hdb3, hdb4], hdb3.options); // Argument 2 is optional.
+db.type('MyCoolValue');
+
+// array & json
+db.json();
+const array = db.array();
+array.keys();
+array.values();
+
+// pull & push
+db.push('MyCoolArray', 0, 1, 2);
+db.pull('MyCoolArray', (value) => value === 1);
+
+// math
+db.math('hyprdb.downloads', '-', 500, true); // Argument 4 is optional.
+db.add('hyprdb.downloads', 1); // Argument 2 and 3 is optional.
+db.sub('hyprdb.downloads', 1); // Argument 2 and 3 is optional.
+
+// static
+Database.checkOptions(db.options); // Argument 1 is optional.
+
+// version
+Database.version
+```

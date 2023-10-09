@@ -1,5 +1,3 @@
-lib/database
-lib/index.ts
 .npmrc
 .prettierrc
 .gitignore

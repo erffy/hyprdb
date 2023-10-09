@@ -1,3 +1,5 @@
+import DriverTypes from 'interfaces/DriverTypes';
+
 /**
  * Driver Options.
  */
@@ -9,38 +11,31 @@ export interface DriverOptions {
   path?: string;
 
   /**
-   * Driver (File) Name.
+   * Driver Name.
    * @default hypr
    */
   name?: string;
 
   /**
+   * Driver Type.
+   * @default 'auto'
+   */
+  type?: DriverTypes;
+
+  /**
    * Spaces.
    * 
-   * Note: Only available when 'useHexEncoding' is 'false'.
+   * Note: Only available in 'JSON'.
    * @default 2
    */
   spaces?: number;
-
-  /**
-   * Use old save method instead of new save method
-   * 
-   * Note: This can affect your performance.
-   * @default false
-   */
-  useOldSaveMethod?: boolean;
-
-  /**
-   * Use hex encoding when save to file.
-   * @default false
-   */
-  useHexEncoding?: boolean;
 };
 
-export const DriverDefaultOptions: DriverOptions = {
+export const DriverOptionsDefault: DriverOptions = {
   path: process.cwd(),
   name: 'hypr',
-  spaces: 2,
-  useOldSaveMethod: false,
-  useHexEncoding: false
+  type: 'json',
+  spaces: 2
 };
+
+export default DriverOptions;

@@ -1,25 +1,27 @@
 {
   "name": "hypr.db",
-  "version": "7.0.0",
-  "description": "Faster, Lightweight and Small Advanced database module.",
+  "version": "7.1.0",
+  "description": "Fastest and Lightweight Map-based Database module.",
   "author": "erffy",
-  "license": "GPL-3.0-or-later",
+  "license": "Apache-2.0",
   "main": "src/index.js",
-  "types": "global.d.ts",
+  "types": "lib/global.d.ts",
   "exports": {
     "default": "./src/index.js",
-    "types": "./global.d.ts"
+    "types": "./lib/global.d.ts"
   },
   "scripts": {
     "start": "node src/index",
-    "build": "rm -rf src && tsc && prettier --write ./src"
+    "build": "tsc && tsc-alias",
+    "build:delete": "rm -rf src"
   },
-  "keywords": [
+  "keywords": [    
     "db",
     "database",
     "json",
     "hyper",
-    "hypr"
+    "hypr",
+    "bson"
   ],
   "repository": {
     "type": "git",
@@ -29,16 +31,24 @@
     "url": "https://github.com/erffy/hyprdb/issues"
   },
   "homepage": "https://github.com/erffy/hyprdb/wiki",
-  "dependencies": {},
-  "devDependencies": {
-    "@types/node": "latest"
+  "peerDependencies": {
+    "bson": "6.1.x"
   },
-  "engines": {
-    "node": ">=14.0.0"
+  "peerDependenciesMeta": {
+    "bson": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "bson": "6.1.x"
   },
   "private": false,
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

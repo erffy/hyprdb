@@ -1,9 +1,24 @@
 # Patch Notes
 
 ## v7
-#### IMPORTANT
-- In v7 version, all drivers have been removed. We only use JSON, because we now write into it in hex and json format using the '.vstore' and '.json' extension.
-  * If you want to use other drivers please use v6.
+### 7.1.0
+> News
+- Added DatabaseManager. (*)
+- Added BSON driver.
+
+- Removed 'useOldSaveMethod' option from Database.
+- Removed 'useHexEncoding' option from Database.
+- Removed 'ping' function from Database.
+- Driver class is now abstract and protected.
+- The 'concat' function is now public in Database.
+
+> Misc
+- Some improvements.
+
+> Fixes
+- Small bug fixed in 'all' function of database.
+
+* Experimental feature
 
 ### 7.0.0
 > News

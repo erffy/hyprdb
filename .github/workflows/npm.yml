@@ -1,4 +1,4 @@
-name: Node.js Package
+name: Node Package
 
 on:
   release:
@@ -9,16 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Post Checkout
+      - name: Checkout
         uses: actions/checkout@master
         
-      - name: Setup Node
+      - name: Node
         uses: actions/setup-node@master
-        with:
-          node-version: 20
-          
-      - name: Setup Yarn
-        uses: DerYeger/yarn-setup-action@master
         with:
           node-version: 20
 
@@ -28,28 +23,23 @@ jobs:
     permissions:
      id-token: write
     steps:
-      - name: Post Checkout
+      - name: Checkout
         uses: actions/checkout@master
         
-      - name: Setup Node
+      - name: Node
         uses: actions/setup-node@master
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
-          
-      - name: Setup Yarn
-        uses: DerYeger/yarn-setup-action@master
-        with:
-          node-version: 20
-          
-      - name: Install TypeScript & Prettier
-        run: npm i -g typescript prettier
+
+      - name: Prepare Required Dependencies
+        run: npm i -g yarn typescript prettier
 
       - name: Install Dependencies
         run: yarn install
         
       - name: Build
-        run: yarn run build
+        run: npm run build
         
       - name: Publish
         run: npm publish
@@ -57,4 +47,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           
       - name: Remove Build
-        run: rm -rf src
+        run: npm run build:remove
