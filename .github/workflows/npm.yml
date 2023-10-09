@@ -33,7 +33,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Prepare Required Dependencies
-        run: npm i -g yarn typescript prettier
+        run: npm i -g yarn typescript tsc-alias
 
       - name: Install Dependencies
         run: yarn install
