@@ -1,6 +1,18 @@
 # Patch Notes
 
 ## v7
+### 7.1.1
+> News
+- Updated README.
+
+- Removed 'autoWrite' option from Database.
+
+> Misc
+- Some improvements.
+
+> Fixes
+- Interface-import based bugs are fixed.
+
 ### 7.1.0
 > News
 - Added DatabaseManager. (*)

@@ -1,6 +1,6 @@
 {
   "name": "hypr.db",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "description": "Fastest and Lightweight Map-based Database module.",
   "author": "erffy",
   "license": "Apache-2.0",

@@ -3,11 +3,11 @@
     <a href='https://github.com/erqeweew/hyprdb/actions/workflows/npm.yml'><img src='https://github.com/erffy/hyprdb/actions/workflows/npm.yml/badge.svg'/></a>
     <a href='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql'><img src='https://github.com/erqeweew/hyprdb/actions/workflows/github-code-scanning/codeql/badge.svg'/></a>
     <br/>
-    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/v/hypr.db'/></a>
-    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/npm/l/hypr.db'/></a>
-    <!-- <a href='https://socket.dev/npm/package/hypr.db/issues'><img src='https://socket.dev/api/badge/npm/package/hypr.db'/></a> -->
-    <br/>
+    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/badge/version-v7.1.1-blue'/></a>
+    <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/badge/license-Apache_2.0-red'/></a>
     <a href='https://npmjs.com/hypr.db'><img src='https://img.shields.io/github/issues/erqeweew/hyprdb'/></a>
+    <br/>
+    <a href='https://socket.dev/npm/package/hypr.db/issues'><img src='https://socket.dev/api/badge/npm/package/hypr.db'/></a>
   </p>
 </div>
 
@@ -24,29 +24,23 @@ yarn add hypr.db
 
 ## [ChangeLog](https://github.com/erqeweew/hyprdb/wiki/Updates)
 > News
-- Added DatabaseManager. (*)
-- Added BSON driver.
+- Updated README.
 
-- Removed 'useOldSaveMethod' option from Database.
-- Removed 'useHexEncoding' option from Database.
-- Removed 'ping' function from Database.
-- Driver class is now abstract and protected.
-- The 'concat' function is now public in Database.
+- Removed 'autoWrite' option from Database.
 
 > Misc
 - Some improvements.
 
 > Fixes
-- Small bug fixed in 'all' function of database.
-
-* Experimental feature
+- Interface-import based bugs are fixed.
 
 ## Usage
 
 - A simple example is given below.
 
+### Database
 ```js
-// ESM (ECMAScript) (& TypeScript)
+// ESM (ECMAScript) (TypeScript)
 import Database, { BSONDriver, JSONDriver } from 'hypr.db';
 
 // CJS (Common)
@@ -102,4 +96,35 @@ Database.checkOptions(db.options); // Argument 1 is optional.
 
 // version
 Database.version
+```
+
+### DatabaseManager
+
+- Note: This is experimental feature. Some features may not work.
+
+```js
+// ESM (ECMAScript) (TypeScript)
+import Database, { DatabaseManager } from 'hypr.db';
+
+// CJS (Common)
+const { Database, DatabaseManager } = require('hypr.db');
+
+global.mgr = new DatabaseManager();
+
+// Create Databases
+const db = new Database();
+const db2 = new Database();
+const db3 = new Database();
+const db4 = new Database();
+
+mgr.set('economy', db);
+mgr.set('utils', db2);
+mgr.set('storage', db3);
+mgr.set('cash', db4);
+
+const getEconomyDatabase = mgr.find((value, key) => key === 'economy'); // Way 1
+const getEconomyDatabase = mgr.get('economy'); // Way 2
+getEconomyDatabase.set('cash', 50);
+
+// All features same with Database. (Only some functions is removed.)
 ```

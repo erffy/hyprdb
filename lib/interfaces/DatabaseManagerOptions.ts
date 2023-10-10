@@ -17,9 +17,4 @@ export interface DatabaseManagerOptionsBase extends DatabaseManagerOptions {
   disableExperimentalNotification: boolean;
 };
 
-export const DatabaseManagerOptionsDefault: DatabaseManagerOptions = {
-  size: 0,
-  disableExperimentalNotification: false
-};
-
 export default DatabaseManagerOptions;

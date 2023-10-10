@@ -21,7 +21,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
-     id-token: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -33,7 +33,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Prepare Required Dependencies
-        run: npm i -g yarn typescript tsc-alias
+        run: npm install --global yarn typescript tsc-alias
 
       - name: Install Dependencies
         run: yarn install
@@ -47,4 +47,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           
       - name: Remove Build
-        run: npm run build:remove
+        run: npm run build:delete

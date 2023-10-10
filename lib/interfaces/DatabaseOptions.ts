@@ -17,12 +17,6 @@ export interface DatabaseOptions {
   overWrite?: boolean;
 
   /**
-   * Database Autowrite.
-   * @default true
-   */
-  autoWrite?: boolean;
-
-  /**
    * Database Driver.
    * @default JSONDriver
    */
@@ -32,17 +26,7 @@ export interface DatabaseOptions {
 export interface DatabaseOptionsBase extends DatabaseOptions {
   size: number;
   overWrite: boolean;
-  autoWrite: boolean;
   driver: Driver;
-};
-
-/**
- * Default Database Options.
- */
-export const DatabaseOptionsDefault: DatabaseOptions = {
-  size: 0,
-  autoWrite: true,
-  overWrite: false
 };
 
 export default DatabaseOptions;

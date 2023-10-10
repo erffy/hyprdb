@@ -1,13 +1,19 @@
 const version: string = (require('../../package.json')).version;
 
 import Driver from 'drivers/Driver';
+import JSONDriver from 'drivers/Json';
 
-import DatabaseOptions, { DatabaseOptionsBase, DatabaseOptionsDefault } from 'interfaces/DatabaseOptions';
+import DatabaseOptions, { DatabaseOptionsBase } from 'interfaces/DatabaseOptions';
 import MathOperations from 'interfaces/MathOperations';
 
 import DataMap from 'interfaces/DataMap';
 import DataRecord from 'interfaces/DataRecord';
 import DataSignature from 'interfaces/DataSignature';
+
+const DatabaseOptionsDefault: DatabaseOptions = {
+  driver: new JSONDriver(),
+  overWrite: false
+};
 
 export default class Database<V extends DataSignature<V> = DataMap> {
   protected readonly options: DatabaseOptionsBase;
@@ -348,12 +354,10 @@ export default class Database<V extends DataSignature<V> = DataMap> {
     options ??= DatabaseOptionsDefault;
     if (typeof options != 'object') throw new TypeError('\'options\' is not object.');
 
-    options.autoWrite ??= DatabaseOptionsDefault.autoWrite;
     options.overWrite ??= DatabaseOptionsDefault.overWrite;
     options.size ??= DatabaseOptionsDefault.size;
     options.driver ??= DatabaseOptionsDefault.driver;
 
-    if (typeof options.autoWrite != 'boolean') throw new TypeError('\'options.autoWrite\' is not boolean.');
     if (typeof options.overWrite != 'boolean') throw new TypeError('\'options.overWrite\' is not boolean.');
     if (typeof options.size != 'number') throw new TypeError('\'options.size\' is not number.');
     if (!(options.driver instanceof Driver)) throw new TypeError('\'options.driver\' is not valid driver.');

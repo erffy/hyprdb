@@ -32,7 +32,7 @@
   },
   "exclude": [
     "node_modules",
-    ".src",
+    "src",
     "tests",
     "lib/global.d.ts"
   ]

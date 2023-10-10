@@ -1,5 +1,10 @@
 import Database from 'client/Database';
-import DatabaseManagerOptions, { DatabaseManagerOptionsBase, DatabaseManagerOptionsDefault } from 'interfaces/DatabaseManagerOptions';
+import DatabaseManagerOptions, { DatabaseManagerOptionsBase } from 'interfaces/DatabaseManagerOptions';
+
+const DatabaseManagerOptionsDefault: DatabaseManagerOptions = {
+  size: 0,
+  disableExperimentalNotification: false
+};
 
 let notified: boolean = false;
 export default class DatabaseManager extends Map<string, Database> {
@@ -223,6 +228,9 @@ export default class DatabaseManager extends Map<string, Database> {
 
     options.size ??= DatabaseManagerOptionsDefault.size;
     options.disableExperimentalNotification ??= DatabaseManagerOptionsDefault.disableExperimentalNotification;
+
+    if (typeof options.size != 'number') throw new TypeError('\'options.size\' is not number.');
+    if (typeof options.disableExperimentalNotification != 'boolean') throw new TypeError('\'options.disableExperimentalNotification\' is not boolean.');
 
     return options as DatabaseManagerOptionsBase;
   };
