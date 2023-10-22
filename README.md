@@ -11,6 +11,9 @@
   </p>
 </div>
 
+# Deprecated
+- No Longer Maintained.
+
 # Hyper Database
 
 - Faster, Lightweight and Small Map-based advanced Database.
