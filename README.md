@@ -1,3 +1,5 @@
+# hypr.db has reached EOL. Please use [erf.db](https://github.com/erffy/erfdb) instead.
+
 <div>
   <p>
     <a href='https://github.com/erqeweew/hyprdb/actions/workflows/npm.yml'><img src='https://github.com/erffy/hyprdb/actions/workflows/npm.yml/badge.svg'/></a>
@@ -10,9 +12,6 @@
     <a href='https://socket.dev/npm/package/hypr.db/issues'><img src='https://socket.dev/api/badge/npm/package/hypr.db'/></a>
   </p>
 </div>
-
-# Deprecated
-- No Longer Maintained.
 
 # Hyper Database
 
