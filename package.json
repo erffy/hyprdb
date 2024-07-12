@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/erffy/hyprdb/wiki",
   "peerDependencies": {
-    "bson": "6.1.x"
+    "bson": "6.8.x"
   },
   "peerDependenciesMeta": {
     "bson": {
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@types/node": "latest",
-    "bson": "6.1.x"
+    "bson": "6.8.x"
   },
   "private": false,
   "publishConfig": {
